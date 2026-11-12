@@ -1,0 +1,853 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0F1B2D">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Тренировки ног</title>
+<style>
+:root{
+  --ink:#0F1B2D; --paper:#F2F5F8; --card:#FFFFFF; --line:#D9E0E8; --mute:#5B6B7F;
+  --blue:#1D6FD8; --green:#2A9D6A; --gold:#B7810A; --gold-bg:#FFF1CC; --red:#B3261E;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--paper);color:var(--ink)}
+body{font:16px/1.4 Roboto,"Segoe UI",system-ui,sans-serif;padding-bottom:calc(72px + env(safe-area-inset-bottom))}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.view[hidden]{display:none}
+.num{font-variant-numeric:tabular-nums}
+
+/* верхняя панель */
+.top{background:var(--ink);color:#fff;padding:calc(14px + env(safe-area-inset-top)) 14px 12px}
+.top-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.top h1{margin:0;font-size:22px;font-weight:700;letter-spacing:.2px}
+.total{font-size:14px;color:#B8C4D6}
+.total b{color:#fff;font-size:18px}
+
+/* лента недель — главный элемент */
+.strip{display:flex;gap:6px;overflow-x:auto;padding:12px 0 4px;scrollbar-width:none;scroll-snap-type:x proximity}
+.strip::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;width:44px;height:56px;border-radius:10px;border:1.5px solid #3A4A63;
+  background:linear-gradient(to top,var(--green) var(--p,0%),rgba(255,255,255,.06) var(--p,0%));
+  color:#fff;font-weight:700;font-size:17px;display:grid;place-items:center;position:relative;scroll-snap-align:center}
+.chip.rest{border-style:dashed;color:#8FA0B8;background:none}
+.chip.sel{border-color:#fff;box-shadow:0 0 0 2px #fff}
+.chip.sel::after{content:"";position:absolute;bottom:-9px;width:18px;height:3px;border-radius:2px;background:#fff}
+
+main{padding:14px}
+.weekhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:2px 0 12px}
+.weekhead h2{margin:0;font-size:20px}
+.weekhead .dates{color:var(--mute);font-size:14px}
+.pill{display:inline-block;padding:4px 12px;border-radius:999px;background:var(--ink);color:#fff;font-size:14px;font-weight:600}
+
+.seg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
+.seg button{min-height:56px;border:1.5px solid var(--line);border-radius:12px;background:var(--card);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.2}
+.seg button b{font-size:17px}
+.seg button span{font-size:13px;color:var(--mute)}
+.seg button.sel{background:var(--blue);border-color:var(--blue);color:#fff}
+.seg button.sel span{color:#DCE9FB}
+.seg button.full:not(.sel){border-color:var(--green)}
+.seg button.full b::after{content:" ✓";color:var(--green)}
+.seg button.full.sel b::after{color:#fff}
+
+.banner{margin:0 0 10px;padding:10px 14px;border-radius:12px;background:#DDF3E8;color:#14573A;font-weight:600}
+ul.list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.ex{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:12px 14px}
+.ex-h{display:flex;align-items:center;gap:12px}
+.ex-h .nm{flex:1;font-size:17px;font-weight:600}
+.ex-h .nm small{display:block;font-weight:400;font-size:13px;color:var(--mute)}
+.ex-h .vol{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+.sets{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.set{width:52px;height:52px;border-radius:50%;border:2px solid #9AA9BB;background:#fff;font-size:18px;font-weight:700;color:var(--mute);font-variant-numeric:tabular-nums}
+.set.on{background:var(--green);border-color:var(--green);color:#fff}
+.ex.on{background:#EAF7F0;border-color:var(--green)}
+.ex.on .nm,.ex.on .vol{color:#14573A}
+.actions{display:flex;gap:8px;margin-top:12px}
+.btn{min-height:48px;padding:0 18px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);font-weight:600}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.danger{color:var(--red)}
+.btn.wide{flex:1}
+.restcard{padding:22px 16px;border:2px dashed #B8C4D6;border-radius:14px;text-align:center;color:var(--mute);background:var(--card)}
+.restcard b{display:block;font-size:19px;color:var(--ink);margin-bottom:4px}
+
+/* рекорды */
+.card{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.card h3{margin:0 0 10px;font-size:17px}
+label{display:block;font-size:14px;color:var(--mute);margin:10px 0 4px}
+input[type=date],input[type=number],input[type=text],select{width:100%;min-height:50px;padding:0 12px;border:1.5px solid var(--line);border-radius:12px;background:#fff;font-size:17px}
+.recs{display:grid;gap:10px}
+.rec{display:grid;grid-template-columns:1fr auto;gap:2px 12px;align-items:center}
+.rec .n{font-weight:600}
+.rec .best{font-size:30px;font-weight:700;text-align:right;line-height:1.1}
+.rec .best small{font-size:14px;font-weight:400;color:var(--mute)}
+.rec .meta{font-size:13px;color:var(--mute)}
+.rec .sp{grid-column:1/-1;height:30px;margin-top:6px}
+.rec .empty{grid-column:1/-1;color:var(--mute);font-size:14px}
+.hist{list-style:none;margin:0;padding:0}
+.hist li{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.hist li:first-child{border-top:0}
+.hist .d{flex:0 0 78px;font-size:14px;color:var(--mute)}
+.hist .t{flex:1;font-size:15px}
+.hist .q{font-weight:700;font-size:17px}
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--gold-bg);color:var(--gold);font-size:12px;font-weight:700;margin-left:6px}
+.hist .x{flex:0 0 44px;height:44px;border:0;background:none;color:var(--mute);font-size:20px;border-radius:10px}
+.note{font-size:14px;color:var(--mute);margin:8px 0 0}
+
+nav{position:fixed;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(4,1fr);background:var(--card);
+  border-top:1.5px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+nav button{min-height:64px;border:0;background:none;font-size:13px;font-weight:600;color:var(--mute);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+nav button svg{width:24px;height:24px}
+nav button[aria-current=page]{color:var(--blue)}
+.dchip{display:flex;flex-direction:column;gap:1px}
+.dchip small{font-size:11px;font-weight:500;color:#B8C4D6}
+.dchip.sel small{color:#fff}
+.daterow{display:flex;gap:8px;margin-bottom:12px}
+.daterow input{flex:1}
+.daterow button{flex:0 0 52px;min-height:50px;border:1.5px solid var(--line);border-radius:12px;background:var(--card);font-size:22px}
+.ed{display:grid;gap:10px}
+.ed .card{margin:0}
+.ed-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.ed-top{display:flex;gap:8px;align-items:flex-end}
+.ed-top > div{flex:1}
+.ed-top label,.ed-row label{margin-top:0}
+.ed-top .del{flex:0 0 50px;min-height:50px;border:1.5px solid var(--line);border-radius:12px;background:#fff;color:var(--red);font-size:20px}
+.seg.two{grid-template-columns:repeat(2,1fr)}
+.chip.has::before{content:"";position:absolute;top:5px;right:5px;width:6px;height:6px;border-radius:50%;background:#7FB3FF}
+.pickrow{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.pickrow:first-child{border-top:0}
+.pickrow .nm{flex:1;font-weight:600}
+.pickrow .nm small{display:block;font-weight:400;font-size:13px;color:var(--mute)}
+.pickrow .btn{min-height:44px;padding:0 14px}
+ul.plain{list-style:none;margin:0;padding:0}
+.libcard{display:flex;align-items:center;gap:10px}
+.libcard .nm{flex:1;font-weight:600}
+.libcard .nm small{display:block;font-weight:400;font-size:14px;color:var(--mute)}
+.libcard .btn{min-height:44px;padding:0 12px;font-size:14px}
+#modal{position:fixed;inset:0;background:rgba(15,27,45,.6);display:none;align-items:center;justify-content:center;padding:16px;z-index:20}
+#modal.show{display:flex}
+.modal-card{background:#fff;border-radius:16px;padding:18px;max-width:420px;width:100%;max-height:85vh;overflow:auto}
+.modal-card h3{margin:0 0 8px;font-size:19px}
+.modal-card ul{margin:8px 0 12px;padding-left:18px;color:var(--mute);font-size:14px}
+.modal-card .btn{width:100%;margin-top:8px}
+input[readonly]{background:#F2F5F8;font-size:13px}
+#toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);
+  max-width:90%;padding:12px 18px;border-radius:12px;background:var(--ink);color:#fff;font-weight:600;
+  opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.show{opacity:1}
+@media (prefers-reduced-motion:reduce){#toast{transition:none}}
+</style>
+</head>
+<body>
+
+<section id="v-train" class="view">
+  <header class="top">
+    <div class="top-row"><h1>Тренировки ног</h1><div class="total num" id="total"></div></div>
+    <div class="strip" id="strip" aria-label="Недели"></div>
+  </header>
+  <main>
+    <div class="weekhead"><div><h2 id="wk-title"></h2><div class="dates num" id="wk-dates"></div></div><span class="pill" id="wk-mode"></span></div>
+    <div id="wk-body"></div>
+  </main>
+</section>
+
+<section id="v-rec" class="view" hidden>
+  <header class="top">
+    <div class="top-row"><h1>Рекорды</h1><div class="total" id="rec-total"></div></div>
+  </header>
+  <main>
+    <form class="card" id="form" novalidate>
+      <h3>Новая запись</h3>
+      <label for="f-date">Дата</label>
+      <input type="date" id="f-date" required>
+      <label for="f-ex">Упражнение</label>
+      <select id="f-ex"></select>
+      <label for="f-qty" id="f-qty-l">Количество</label>
+      <input type="number" id="f-qty" inputmode="decimal" min="0" step="any" placeholder="0" required>
+      <div class="actions"><button class="btn primary wide" type="submit">Записать</button></div>
+    </form>
+
+    <div class="card"><h3>Лучшие результаты</h3><div class="recs" id="recs"></div></div>
+
+    <div class="card"><h3>История</h3><ul class="hist" id="hist"></ul>
+      <div class="actions"><button class="btn wide" id="more" type="button" hidden>Показать ещё</button></div></div>
+
+    <div class="card"><h3>Копия данных</h3>
+      <p class="note" style="margin-top:0">Данные хранятся только на этом телефоне. Сохраняйте копию время от времени, например перед очисткой браузера.</p>
+      <div class="actions"><button class="btn wide" id="export" type="button">Сохранить копию</button>
+      <button class="btn wide" id="import" type="button">Загрузить копию</button></div>
+      <input type="file" id="file" accept="application/json,.json" hidden>
+    </div>
+  </main>
+</section>
+
+<section id="v-abs" class="view" hidden>
+  <header class="top">
+    <div class="top-row"><h1>Пресс</h1><div class="total num" id="abs-total"></div></div>
+    <div class="strip" id="abs-strip" aria-label="Последние дни"></div>
+  </header>
+  <main>
+    <div class="weekhead"><div><h2 id="abs-title"></h2><div class="dates num" id="abs-sub"></div></div></div>
+    <div id="abs-body"></div>
+  </main>
+</section>
+
+<section id="v-plan" class="view" hidden>
+  <header class="top">
+    <div class="top-row"><h1>План</h1><div class="total num" id="pl-total"></div></div>
+    <div class="strip" id="pl-strip" aria-label="Дни плана"></div>
+  </header>
+  <main>
+    <div class="seg two" id="pl-seg"></div>
+    <div class="weekhead"><div><h2 id="pl-title"></h2><div class="dates num" id="pl-sub"></div></div></div>
+    <div id="pl-body"></div>
+  </main>
+</section>
+
+<nav>
+  <button data-tab="train" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4M9 15l2 2 4-4"/></svg>Тренировки</button>
+  <button data-tab="rec"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5M4 19h16M8 15l4-5 3 3 5-7"/></svg>Рекорды</button>
+  <button data-tab="abs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="18" rx="3"/><path d="M12 3v18M6 9h12M6 15h12"/></svg>Пресс</button>
+  <button data-tab="plan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6h1M4 12h1M4 18h1"/></svg>План</button>
+</nav>
+<div id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-t"><div class="modal-card" id="modal-body"></div></div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+const START = new Date(2026, 10, 10);           // вторник 10.11.2026
+const OFF = [0, 1, 3, 4], DN = ["Вт", "Ср", "Пт", "Сб"];
+const EX = ["Прыжки в высоту", "Подъёмы на носки", "Степ-апы", "Тур 1", "Тур 2", "Прыжки на носках", "Прыжки в полном приседе"];
+// режим (1 — одна нога, 2 — две ноги, 0 — отдых) и объёмы в порядке EX
+const WK = {
+  1:[1,"2x20 2x10 2x10 2x10 2x10 2x15 4x15"], 2:[1,"3x20 2x15 2x15 2x15 2x15 2x20 4x20"],
+  3:[2,"3x25 2x20 2x10 2x10 2x10 2x25 4x20"], 4:[1,"3x30 2x25 2x20 2x20 2x20 2x30 4x20"],
+  5:[1,"4x25 2x30 2x20 2x20 2x20 2x35 4x25"], 6:[2,"3x40 2x35 2x25 2x25 2x25 2x40 4x30"],
+  7:[1,"4x30 2x40 2x25 2x25 2x25 2x50 5x25"], 8:[1,"3x50 2x45 2x30 2x30 2x30 2x60 5x25"],
+  9:[2,"4x50 2x50 2x30 2x30 2x30 2x70 5x30"], 10:[1,"5x40 2x55 2x35 2x35 2x35 2x80 5x30"],
+  11:[1,"6x50 2x50 2x35 2x35 2x35 2x90 5x30"], 12:[2,"4x75 4x35 2x40 2x40 2x40 2x100 6x30"],
+  13:[0,""], 14:[1,"3x30 2x30 2x20 2x20 2x20 2x30 4x20"], 15:[2,"4x100 4x50 2x50 2x50 2x50 2x100 5x50"]
+};
+const RX = [
+  {n:"Двойные прыжки на скакалке — 2 ноги", u:"раз"},
+  {n:"Двойные прыжки на скакалке — левая нога", u:"раз"},
+  {n:"Двойные прыжки на скакалке — правая нога", u:"раз"},
+  {n:"Прыжки в длину — с двух ног", u:"см"},
+  {n:"Прыжки в длину — с одной ноги", u:"см"}
+];
+
+const K = "legs-tracker-v1";
+const $ = id => document.getElementById(id);
+const pad = n => String(n).padStart(2, "0");
+const fmt = d => pad(d.getDate()) + "." + pad(d.getMonth() + 1);
+const iso = d => d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+const isoRu = s => s.slice(8, 10) + "." + s.slice(5, 7) + "." + s.slice(0, 4);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+const ABS_DEF = [
+  {id:1, n:"Скручивания", s:3, r:20, u:"раз"},
+  {id:2, n:"Подъём ног лёжа", s:3, r:15, u:"раз"},
+  {id:3, n:"Планка", s:3, r:45, u:"сек"},
+  {id:4, n:"Велосипед", s:3, r:20, u:"раз"},
+  {id:5, n:"Боковая планка, каждая сторона", s:2, r:30, u:"сек"}
+];
+function fixAbs(o) {
+  if (!o.abs || !Array.isArray(o.abs.list) || typeof o.abs.done !== "object") o.abs = {list:ABS_DEF.map(x => Object.assign({}, x)), done:{}};
+  if (!Array.isArray(o.lib)) o.lib = [];
+  if (!o.plan || typeof o.plan !== "object" || Array.isArray(o.plan)) o.plan = {};
+  if (!o.pdone || typeof o.pdone !== "object" || Array.isArray(o.pdone)) o.pdone = {};
+  if (typeof o.pid !== "number") o.pid = 0;
+  if (!Array.isArray(o.imp)) o.imp = [];
+}
+let S = load();
+function migrate() {
+  let ch = false;
+  Object.keys(S.done).forEach(k => {
+    const q = k.split("-");
+    if (q.length !== 3) return;
+    const w = +q[0], d = +q[1], e = +q[2];
+    delete S.done[k]; ch = true;
+    if (WK[w] && WK[w][0] && e < 7) for (let t = 0; t < setsOf(w, e); t++) S.done[key(w, d, e, t)] = 1;
+  });
+  if (ch) save();
+}
+function load() {
+  try { const o = JSON.parse(localStorage.getItem(K)); if (o && o.done && Array.isArray(o.rec)) { fixAbs(o); return o; } } catch (e) {}
+  const o = {done:{}, rec:[]}; fixAbs(o); return o;
+}
+function save() { try { localStorage.setItem(K, JSON.stringify(S)); } catch (e) { toast("Не удалось сохранить данные"); } }
+
+function dateOf(w, di) { const d = new Date(START); d.setDate(d.getDate() + (w - 1) * 7 + OFF[di]); return d; }
+const key = (w, d, e, t) => w + "-" + d + "-" + e + "-" + t;
+const setsOf = (w, e) => WK[w][0] ? +WK[w][1].split(" ")[e].split("x")[0] : 0;
+function dayTotal(w) { let n = 0; for (let e = 0; e < 7; e++) n += setsOf(w, e); return n; }
+function dayCount(w, d) { let c = 0; for (let e = 0; e < 7; e++) for (let t = 0; t < setsOf(w, e); t++) if (S.done[key(w, d, e, t)]) c++; return c; }
+function exCount(w, d, e) { let c = 0; for (let t = 0; t < setsOf(w, e); t++) if (S.done[key(w, d, e, t)]) c++; return c; }
+function weekShare(w) { let c = 0; for (let d = 0; d < 4; d++) c += dayCount(w, d); return WK[w][0] ? c / (4 * dayTotal(w)) : 0; }
+let TOTAL = 0; for (let w = 1; w <= 15; w++) if (WK[w][0]) TOTAL += 4 * dayTotal(w);
+migrate();
+
+function initialSel() {
+  const t = new Date(); t.setHours(0, 0, 0, 0);
+  const diff = Math.round((t - START) / 864e5);
+  if (diff < 0) return {w:1, d:0};
+  if (diff >= 105) return {w:15, d:3};
+  let w = Math.floor(diff / 7) + 1, d = OFF.findIndex(o => o >= diff % 7);
+  if (d < 0) { if (w < 15) { w++; d = 0; } else d = 3; }
+  return {w, d};
+}
+let sel = initialSel();
+
+/* ---------- Тренировки ---------- */
+function renderTrain() {
+  const doneAll = Object.keys(S.done).filter(k => S.done[k]).length;
+  $("total").innerHTML = "подходов <b class='num'>" + doneAll + "</b> из " + TOTAL;
+
+  let strip = "";
+  for (let w = 1; w <= 15; w++) {
+    const rest = WK[w][0] === 0;
+    strip += `<button class="chip${rest ? " rest" : ""}${w === sel.w ? " sel" : ""}" data-w="${w}" style="--p:${Math.round(weekShare(w) * 100)}%" aria-label="Неделя ${w}${rest ? ", отдых" : ""}"><span class="num">${w}</span></button>`;
+  }
+  $("strip").innerHTML = strip;
+  const cur = $("strip").querySelector(".sel");
+  if (cur) cur.scrollIntoView({inline:"center", block:"nearest"});
+
+  const [m, vs] = WK[sel.w];
+  $("wk-title").textContent = "Неделя " + sel.w;
+  $("wk-dates").textContent = fmt(dateOf(sel.w, 0)) + " – " + fmt(dateOf(sel.w, 3));
+  $("wk-mode").textContent = m === 0 ? "Отдых" : (m === 1 ? "1 нога" : "2 ноги");
+
+  if (m === 0) {
+    $("wk-body").innerHTML = `<div class="restcard"><b>Неделя отдыха</b>Программа не выполняется.</div>`;
+    return;
+  }
+  const v = vs.split(" ");
+  let h = `<div class="seg" role="tablist">`;
+  for (let d = 0; d < 4; d++) {
+    const full = dayCount(sel.w, d) === dayTotal(sel.w);
+    h += `<button role="tab" data-d="${d}" class="${d === sel.d ? "sel" : ""}${full ? " full" : ""}" aria-selected="${d === sel.d}"><b>${DN[d]}</b><span class="num">${fmt(dateOf(sel.w, d))}</span></button>`;
+  }
+  h += `</div>`;
+  const cnt = dayCount(sel.w, sel.d), tot = dayTotal(sel.w);
+  if (cnt === tot) h += `<p class="banner">День выполнен</p>`;
+  h += `<ul class="list">`;
+  EX.forEach((n, i) => {
+    const ns = setsOf(sel.w, i), c = exCount(sel.w, sel.d, i), on = c === ns;
+    const legs = (i === 3 || i === 4) ? "на двух ногах" : (m === 1 ? "на каждую ногу" : "на двух ногах");
+    let sets = "";
+    for (let t = 0; t < ns; t++) {
+      const d = !!S.done[key(sel.w, sel.d, i, t)];
+      sets += `<button class="set${d ? " on" : ""}" data-e="${i}" data-t="${t}" aria-pressed="${d}" aria-label="${n}, подход ${t + 1} из ${ns}">${t + 1}</button>`;
+    }
+    h += `<li><div class="ex${on ? " on" : ""}"><div class="ex-h"><span class="nm">${n}<small>${legs}, сделано ${c} из ${ns}</small></span><span class="vol">${v[i].replace("x", "×")}</span></div><div class="sets">${sets}</div></div></li>`;
+  });
+  h += `</ul><div class="actions"><button class="btn wide" id="all">${cnt === tot ? "Снять все отметки" : "Отметить всё"}</button></div>`;
+  $("wk-body").innerHTML = h;
+}
+
+$("strip").addEventListener("click", e => {
+  const b = e.target.closest(".chip"); if (!b) return;
+  sel.w = +b.dataset.w; renderTrain();
+});
+$("wk-body").addEventListener("click", e => {
+  const s = e.target.closest("[data-d]");
+  if (s) { sel.d = +s.dataset.d; renderTrain(); return; }
+  const r = e.target.closest(".set");
+  if (r) {
+    const k = key(sel.w, sel.d, +r.dataset.e, +r.dataset.t);
+    if (S.done[k]) delete S.done[k]; else S.done[k] = 1;
+    save(); renderTrain(); return;
+  }
+  if (e.target.id === "all") {
+    const all = dayCount(sel.w, sel.d) === dayTotal(sel.w);
+    for (let i = 0; i < 7; i++) for (let t = 0; t < setsOf(sel.w, i); t++) { const k = key(sel.w, sel.d, i, t); if (all) delete S.done[k]; else S.done[k] = 1; }
+    save(); renderTrain();
+  }
+});
+
+/* ---------- Рекорды ---------- */
+let histLimit = 15;
+const cmp = (a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : a.id - b.id;
+
+function renderRec() {
+  const asc = S.rec.slice().sort(cmp);
+  const best = {}, flag = {};
+  asc.forEach(r => { if (!(r.ex in best) || r.q > best[r.ex]) { flag[r.id] = true; best[r.ex] = r.q; } });
+  $("rec-total").textContent = S.rec.length ? "записей: " + S.rec.length : "";
+
+  $("recs").innerHTML = RX.map((x, i) => {
+    const rows = asc.filter(r => r.ex === i);
+    if (!rows.length) return `<div class="rec"><div class="n">${esc(x.n)}</div><div></div><div class="empty">Пока нет записей</div></div>`;
+    const b = Math.max(...rows.map(r => r.q));
+    const bd = rows.find(r => r.q === b).date, last = rows[rows.length - 1];
+    return `<div class="rec"><div class="n">${esc(x.n)}</div><div class="best num">${b} <small>${x.u}</small></div>
+      <div class="meta num">рекорд ${isoRu(bd)}, последний результат ${last.q} (${isoRu(last.date)})</div><div></div>
+      <div class="sp">${spark(rows.slice(-12).map(r => r.q))}</div></div>`;
+  }).join("");
+
+  const desc = asc.slice().reverse();
+  $("hist").innerHTML = desc.length ? desc.slice(0, histLimit).map(r =>
+    `<li><span class="d num">${isoRu(r.date)}</span><span class="t">${esc(RX[r.ex].n)}${flag[r.id] ? '<span class="badge">рекорд</span>' : ""}</span><span class="q num">${r.q}</span><button class="x" data-id="${r.id}" aria-label="Удалить запись">✕</button></li>`
+  ).join("") : `<li><span class="t" style="color:var(--mute)">Записей пока нет. Добавьте первую выше.</span></li>`;
+  $("more").hidden = desc.length <= histLimit;
+}
+function spark(v) {
+  if (v.length < 2) return "";
+  const W = 300, H = 30, p = 3, mn = Math.min(...v), mx = Math.max(...v), rg = mx - mn || 1;
+  const pts = v.map((y, i) => (p + i * (W - 2 * p) / (v.length - 1)).toFixed(1) + "," + (H - p - (y - mn) / rg * (H - 2 * p)).toFixed(1));
+  const l = pts[pts.length - 1].split(",");
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="30" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts.join(" ")}" fill="none" stroke="#1D6FD8" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>`;
+}
+
+$("f-ex").innerHTML = RX.map((x, i) => `<option value="${i}">${esc(x.n)}</option>`).join("");
+$("f-date").value = iso(new Date());
+function qtyLabel() { $("f-qty-l").textContent = "Результат, " + RX[+$("f-ex").value].u; }
+$("f-ex").addEventListener("change", qtyLabel); qtyLabel();
+
+$("form").addEventListener("submit", e => {
+  e.preventDefault();
+  const date = $("f-date").value, ex = +$("f-ex").value, q = parseFloat($("f-qty").value.replace(",", "."));
+  if (!date) { toast("Выберите дату"); return; }
+  if (!(q > 0)) { toast("Введите результат больше нуля"); $("f-qty").focus(); return; }
+  const prev = S.rec.filter(r => r.ex === ex).map(r => r.q);
+  const isRec = !prev.length || q > Math.max(...prev);
+  const id = S.rec.reduce((m, r) => Math.max(m, r.id), 0) + 1;
+  S.rec.push({id, date, ex, q}); save();
+  $("f-qty").value = ""; renderRec();
+  toast(isRec ? "Новый рекорд: " + q + " " + RX[ex].u : "Записано: " + q + " " + RX[ex].u);
+});
+$("hist").addEventListener("click", e => {
+  const b = e.target.closest(".x"); if (!b) return;
+  if (!confirm("Удалить эту запись?")) return;
+  S.rec = S.rec.filter(r => r.id !== +b.dataset.id); save(); renderRec();
+});
+$("more").addEventListener("click", () => { histLimit += 15; renderRec(); });
+
+$("export").addEventListener("click", () => {
+  const blob = new Blob([JSON.stringify(S)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = "trenirovki-kopiya-" + iso(new Date()) + ".json";
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  toast("Копия сохранена в загрузки");
+});
+$("import").addEventListener("click", () => $("file").click());
+$("file").addEventListener("change", () => {
+  const f = $("file").files[0]; if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    try {
+      const o = JSON.parse(rd.result);
+      if (!o || typeof o.done !== "object" || !Array.isArray(o.rec)) throw 0;
+      if (!confirm("Заменить текущие данные данными из копии?")) return;
+      S = {done:o.done, rec:o.rec, abs:o.abs, lib:o.lib, plan:o.plan, pdone:o.pdone, pid:o.pid, imp:o.imp}; fixAbs(S); migrate(); save(); renderTrain(); renderRec(); renderAbs(); renderPlan(); toast("Данные загружены");
+    } catch (e) { toast("Файл не подходит"); }
+  };
+  rd.readAsText(f); $("file").value = "";
+});
+
+/* ---------- Пресс ---------- */
+const WD = ["воскресенье","понедельник","вторник","среда","четверг","пятница","суббота"];
+const WDS = ["вс","пн","вт","ср","чт","пт","сб"];
+let absDate = iso(new Date()), absEdit = false;
+const parseIso = t => { const [y, m, d] = t.split("-").map(Number); return new Date(y, m - 1, d); };
+const shiftIso = (t, n) => { const d = parseIso(t); d.setDate(d.getDate() + n); return iso(d); };
+const akey = (d, id, t) => d + "|" + id + "|" + t;
+const aCount = (d, x) => { let c = 0; for (let t = 0; t < x.s; t++) if (S.abs.done[akey(d, x.id, t)]) c++; return c; };
+const aTotal = () => S.abs.list.reduce((a, x) => a + x.s, 0);
+const aDay = d => S.abs.list.reduce((a, x) => a + aCount(d, x), 0);
+
+function renderAbs() {
+  const tot = aTotal(), today = iso(new Date());
+  $("abs-total").innerHTML = "подходов <b class='num'>" + aDay(absDate) + "</b> из " + tot;
+  let st = "";
+  for (let i = 20; i >= 0; i--) {
+    const d = shiftIso(today, -i), p = tot ? Math.round(aDay(d) / tot * 100) : 0;
+    st += `<button class="chip dchip${d === absDate ? " sel" : ""}" data-date="${d}" style="--p:${p}%" aria-label="${isoRu(d)}"><span class="num">${+d.slice(8)}</span><small>${WDS[parseIso(d).getDay()]}</small></button>`;
+  }
+  $("abs-strip").innerHTML = st;
+  const cur = $("abs-strip").querySelector(".sel");
+  if (cur) cur.scrollIntoView({inline:"center", block:"nearest"}); else $("abs-strip").scrollLeft = 9999;
+
+  $("abs-title").textContent = absDate === today ? "Сегодня" : absDate === shiftIso(today, -1) ? "Вчера" : WD[parseIso(absDate).getDay()];
+  $("abs-sub").textContent = WD[parseIso(absDate).getDay()] + ", " + isoRu(absDate);
+
+  let h = "";
+  if (absEdit) {
+    h += `<div class="ed">`;
+    S.abs.list.forEach(x => {
+      h += `<div class="card"><div class="ed-top"><div><label for="n${x.id}">Название</label><input type="text" id="n${x.id}" value="${esc(x.n)}" data-id="${x.id}" data-f="n" maxlength="60"></div><button class="del" data-id="${x.id}" aria-label="Удалить упражнение">✕</button></div>
+        <div class="ed-row"><div><label>Подходов</label><input type="number" inputmode="numeric" min="1" max="20" value="${x.s}" data-id="${x.id}" data-f="s"></div>
+        <div><label>Повторов</label><input type="number" inputmode="numeric" min="1" value="${x.r}" data-id="${x.id}" data-f="r"></div>
+        <div><label>Единица</label><select data-id="${x.id}" data-f="u"><option value="раз"${x.u === "раз" ? " selected" : ""}>раз</option><option value="сек"${x.u === "сек" ? " selected" : ""}>сек</option></select></div></div></div>`;
+    });
+    h += `</div><div class="actions"><button class="btn wide" id="abs-add">Добавить упражнение</button><button class="btn primary wide" id="abs-done">Готово</button></div>`;
+    $("abs-body").innerHTML = h; return;
+  }
+  h += `<div class="daterow"><button id="abs-prev" aria-label="Предыдущий день">‹</button><input type="date" id="abs-date" value="${absDate}" aria-label="Дата"><button id="abs-next" aria-label="Следующий день">›</button></div>`;
+  if (!S.abs.list.length) {
+    h += `<div class="restcard"><b>Список пуст</b>Добавьте упражнения, чтобы отмечать подходы.</div><div class="actions"><button class="btn primary wide" id="abs-edit">Изменить список</button></div>`;
+    $("abs-body").innerHTML = h; return;
+  }
+  if (aDay(absDate) === tot) h += `<p class="banner">День выполнен</p>`;
+  h += `<ul class="list">`;
+  S.abs.list.forEach(x => {
+    const c = aCount(absDate, x), on = c === x.s;
+    let sets = "";
+    for (let t = 0; t < x.s; t++) {
+      const d = !!S.abs.done[akey(absDate, x.id, t)];
+      sets += `<button class="set${d ? " on" : ""}" data-x="${x.id}" data-t="${t}" aria-pressed="${d}" aria-label="${esc(x.n)}, подход ${t + 1} из ${x.s}">${t + 1}</button>`;
+    }
+    h += `<li><div class="ex${on ? " on" : ""}"><div class="ex-h"><span class="nm">${esc(x.n)}<small>сделано ${c} из ${x.s}</small></span><span class="vol">${x.s}×${x.r}${x.u === "сек" ? ' <small style="font-size:14px;font-weight:400">сек</small>' : ""}</span></div><div class="sets">${sets}</div></div></li>`;
+  });
+  h += `</ul><div class="actions"><button class="btn wide" id="abs-all">${aDay(absDate) === tot ? "Снять все отметки" : "Отметить всё"}</button><button class="btn wide" id="abs-edit">Изменить список</button></div>`;
+  $("abs-body").innerHTML = h;
+}
+
+$("abs-strip").addEventListener("click", e => {
+  const b = e.target.closest(".chip"); if (!b) return;
+  absDate = b.dataset.date; renderAbs();
+});
+$("abs-body").addEventListener("click", e => {
+  const t = e.target.closest("button"); if (!t) return;
+  if (t.id === "abs-prev") { absDate = shiftIso(absDate, -1); renderAbs(); return; }
+  if (t.id === "abs-next") { absDate = shiftIso(absDate, 1); renderAbs(); return; }
+  if (t.id === "abs-edit") { absEdit = true; renderAbs(); return; }
+  if (t.id === "abs-done") { absEdit = false; save(); renderAbs(); return; }
+  if (t.id === "abs-add") {
+    const id = S.abs.list.reduce((m, x) => Math.max(m, x.id), 0) + 1;
+    S.abs.list.push({id, n:"Новое упражнение", s:3, r:15, u:"раз"}); save(); renderAbs(); return;
+  }
+  if (t.classList.contains("del")) {
+    if (!confirm("Удалить это упражнение из списка?")) return;
+    S.abs.list = S.abs.list.filter(x => x.id !== +t.dataset.id); save(); renderAbs(); return;
+  }
+  if (t.classList.contains("set")) {
+    const k = akey(absDate, +t.dataset.x, +t.dataset.t);
+    if (S.abs.done[k]) delete S.abs.done[k]; else S.abs.done[k] = 1;
+    save(); renderAbs(); return;
+  }
+  if (t.id === "abs-all") {
+    const all = aDay(absDate) === aTotal();
+    S.abs.list.forEach(x => { for (let i = 0; i < x.s; i++) { const k = akey(absDate, x.id, i); if (all) delete S.abs.done[k]; else S.abs.done[k] = 1; } });
+    save(); renderAbs();
+  }
+});
+$("abs-body").addEventListener("change", e => {
+  const el = e.target;
+  if (el.id === "abs-date") { if (el.value) { absDate = el.value; renderAbs(); } return; }
+  const x = S.abs.list.find(v => v.id === +el.dataset.id); if (!x) return;
+  const f = el.dataset.f;
+  if (f === "n") { const v = el.value.trim(); if (v) x.n = v; else el.value = x.n; }
+  else if (f === "u") x.u = el.value;
+  else {
+    const v = Math.round(+el.value);
+    if (v >= 1 && (f !== "s" || v <= 20)) x[f] = v; else el.value = x[f];
+  }
+  save();
+});
+
+/* ---------- План и справочник ---------- */
+let pScope = "all", pShareId = "";
+let pTab = "plan", pDate = iso(new Date()), pMode = "view", pQuery = "", libEdit = null;
+const pkey = (d, id, t) => d + "|" + id + "|" + t;
+const pList = d => S.plan[d] || [];
+const pCount = (d, x) => { let c = 0; for (let t = 0; t < x.s; t++) if (S.pdone[pkey(d, x.id, t)]) c++; return c; };
+const pTotal = d => pList(d).reduce((a, x) => a + x.s, 0);
+const pDay = d => pList(d).reduce((a, x) => a + pCount(d, x), 0);
+const unitSm = x => x.u === "сек" ? ' <small style="font-size:14px;font-weight:400">сек</small>' : "";
+const unitOpts = u => `<option value="раз"${u === "раз" ? " selected" : ""}>раз</option><option value="сек"${u === "сек" ? " selected" : ""}>сек</option>`;
+
+function renderPlan() {
+  const today = iso(new Date()), isPlan = pTab === "plan";
+  $("pl-seg").innerHTML = `<button data-pt="plan" class="${isPlan ? "sel" : ""}"><b>План</b></button><button data-pt="lib" class="${isPlan ? "" : "sel"}"><b>Справочник</b></button>`;
+  $("pl-strip").hidden = !isPlan;
+  if (isPlan) {
+    const tot = pTotal(pDate);
+    $("pl-total").innerHTML = tot ? "подходов <b class='num'>" + pDay(pDate) + "</b> из " + tot : "";
+    let st = "";
+    for (let i = -3; i <= 17; i++) {
+      const d = shiftIso(today, i), t = pTotal(d), pc = t ? Math.round(pDay(d) / t * 100) : 0;
+      st += `<button class="chip dchip${d === pDate ? " sel" : ""}${t ? " has" : ""}" data-date="${d}" style="--p:${pc}%" aria-label="${isoRu(d)}${t ? ", есть план" : ""}"><span class="num">${+d.slice(8)}</span><small>${WDS[parseIso(d).getDay()]}</small></button>`;
+    }
+    $("pl-strip").innerHTML = st;
+    const cur = $("pl-strip").querySelector(".sel") || $("pl-strip").children[3];
+    if (cur) cur.scrollIntoView({inline:"center", block:"nearest"});
+    $("pl-title").textContent = pDate === today ? "Сегодня" : pDate === shiftIso(today, 1) ? "Завтра" : pDate === shiftIso(today, -1) ? "Вчера" : WD[parseIso(pDate).getDay()];
+    $("pl-sub").textContent = WD[parseIso(pDate).getDay()] + ", " + isoRu(pDate);
+    $("pl-body").innerHTML = planBody();
+  } else {
+    $("pl-total").innerHTML = "упражнений <b class='num'>" + S.lib.length + "</b>";
+    $("pl-title").textContent = "Справочник";
+    $("pl-sub").textContent = "Ваши упражнения для плана";
+    $("pl-body").innerHTML = libBody();
+  }
+}
+
+function pickList() {
+  const q = pQuery.trim().toLowerCase();
+  const items = S.lib.filter(x => !q || x.n.toLowerCase().indexOf(q) >= 0);
+  if (!items.length) return `<li class="note">Ничего не найдено.</li>`;
+  const inPlan = pList(pDate);
+  return items.map(x => {
+    const n = inPlan.filter(y => y.lid === x.id).length;
+    return `<li class="pickrow"><span class="nm">${esc(x.n)}<small>${x.s}×${x.r} ${x.u}${n ? ", уже в плане: " + n : ""}</small></span><button class="btn" data-add="${x.id}">Добавить</button></li>`;
+  }).join("");
+}
+
+function planBody() {
+  if (pMode === "share") return shareBody();
+  const L = pList(pDate);
+  if (pMode === "pick") {
+    if (!S.lib.length) return `<div class="restcard"><b>Справочник пуст</b>Сначала добавьте упражнения в справочник.</div><div class="actions"><button class="btn primary wide" id="pl-golib">Открыть справочник</button><button class="btn wide" id="pl-pickdone">Назад</button></div>`;
+    return `<div class="card"><h3>Добавить в план на ${fmt(parseIso(pDate))}</h3><input type="text" id="pl-q" placeholder="Поиск по названию" value="${esc(pQuery)}" aria-label="Поиск"><ul class="plain" id="pl-pick" style="margin-top:8px">${pickList()}</ul></div><div class="actions"><button class="btn primary wide" id="pl-pickdone">Готово</button></div>`;
+  }
+  if (pMode === "edit") {
+    let h = `<div class="ed">`;
+    L.forEach(x => {
+      h += `<div class="card"><div class="ed-top"><div><b>${esc(x.n)}</b></div><button class="del pdel" data-id="${x.id}" aria-label="Убрать из плана">✕</button></div>
+        <div class="ed-row" style="margin-top:8px"><div><label>Подходов</label><input type="number" inputmode="numeric" min="1" max="20" value="${x.s}" data-id="${x.id}" data-f="s"></div>
+        <div><label>Повторов</label><input type="number" inputmode="numeric" min="1" value="${x.r}" data-id="${x.id}" data-f="r"></div>
+        <div><label>Единица</label><select data-id="${x.id}" data-f="u">${unitOpts(x.u)}</select></div></div></div>`;
+    });
+    return h + `</div><div class="actions"><button class="btn primary wide" id="pl-editdone">Готово</button></div>`;
+  }
+  let h = `<div class="daterow"><button id="pl-prev" aria-label="Предыдущий день">‹</button><input type="date" id="pl-date" value="${pDate}" aria-label="Дата"><button id="pl-next" aria-label="Следующий день">›</button></div>`;
+  if (!L.length) {
+    return h + `<div class="restcard"><b>План на этот день пуст</b>Добавьте упражнения из справочника.</div><div class="actions"><button class="btn primary wide" id="pl-pick-open">Добавить из справочника</button></div><div class="actions"><button class="btn wide" id="pl-share">Отправить план</button></div>`;
+  }
+  const tot = pTotal(pDate), all = pDay(pDate) === tot;
+  if (all) h += `<p class="banner">День выполнен</p>`;
+  h += `<ul class="list">`;
+  L.forEach(x => {
+    const c = pCount(pDate, x), on = c === x.s;
+    let sets = "";
+    for (let t = 0; t < x.s; t++) {
+      const d = !!S.pdone[pkey(pDate, x.id, t)];
+      sets += `<button class="set${d ? " on" : ""}" data-p="${x.id}" data-t="${t}" aria-pressed="${d}" aria-label="${esc(x.n)}, подход ${t + 1} из ${x.s}">${t + 1}</button>`;
+    }
+    h += `<li><div class="ex${on ? " on" : ""}"><div class="ex-h"><span class="nm">${esc(x.n)}<small>сделано ${c} из ${x.s}</small></span><span class="vol">${x.s}×${x.r}${unitSm(x)}</span></div><div class="sets">${sets}</div></div></li>`;
+  });
+  return h + `</ul><div class="actions"><button class="btn primary wide" id="pl-pick-open">Добавить из справочника</button></div><div class="actions"><button class="btn wide" id="pl-all">${all ? "Снять все отметки" : "Отметить всё"}</button><button class="btn wide" id="pl-edit">Изменить</button></div><div class="actions"><button class="btn wide" id="pl-share">Отправить план</button></div>`;
+}
+
+function libBody() {
+  const e = libEdit != null ? S.lib.find(x => x.id === libEdit) : null;
+  const v = e || {n:"", s:3, r:15, u:"раз"};
+  let h = `<form class="card" id="lb-form" novalidate><h3>${e ? "Изменить упражнение" : "Новое упражнение"}</h3>
+    <label for="lb-n">Название</label><input type="text" id="lb-n" value="${esc(v.n)}" maxlength="60" required>
+    <div class="ed-row"><div><label for="lb-s">Подходов</label><input type="number" id="lb-s" inputmode="numeric" min="1" max="20" value="${v.s}"></div>
+    <div><label for="lb-r">Повторов</label><input type="number" id="lb-r" inputmode="numeric" min="1" value="${v.r}"></div>
+    <div><label for="lb-u">Единица</label><select id="lb-u">${unitOpts(v.u)}</select></div></div>
+    <div class="actions"><button class="btn primary wide" type="submit">${e ? "Сохранить" : "Добавить в справочник"}</button>${e ? '<button class="btn wide" type="button" id="lb-cancel">Отмена</button>' : ""}</div></form>`;
+  if (!S.lib.length) return h + `<div class="restcard"><b>Справочник пуст</b>Добавьте первое упражнение выше.</div>`;
+  h += `<ul class="plain">`;
+  S.lib.slice().sort((a, b) => a.n.localeCompare(b.n, "ru")).forEach(x => {
+    h += `<li class="card libcard"><span class="nm">${esc(x.n)}<small>${x.s}×${x.r} ${x.u}</small></span><button class="btn" data-ledit="${x.id}">Изменить</button><button class="btn danger" data-ldel="${x.id}" aria-label="Удалить из справочника">✕</button></li>`;
+  });
+  return h + `</ul>`;
+}
+
+$("pl-seg").addEventListener("click", e => {
+  const b = e.target.closest("[data-pt]"); if (!b) return;
+  pTab = b.dataset.pt; pMode = "view"; libEdit = null; renderPlan(); window.scrollTo(0, 0);
+});
+$("pl-strip").addEventListener("click", e => {
+  const b = e.target.closest(".chip"); if (!b) return;
+  pDate = b.dataset.date; pMode = "view"; renderPlan();
+});
+$("pl-body").addEventListener("click", e => {
+  const t = e.target.closest("button"); if (!t) return;
+  const id = t.id;
+  if (id === "pl-share") { pMode = "share"; pShareId = Math.random().toString(36).slice(2, 8); pScope = Object.keys(S.plan).some(d => d >= iso(new Date()) && pList(d).length) ? "all" : "day"; renderPlan(); return; }
+  if (id === "pl-share-back") { pMode = "view"; renderPlan(); return; }
+  if (t.dataset.sc) { pScope = t.dataset.sc; renderPlan(); return; }
+  if (id === "pl-copy") { copyLink(); return; }
+  if (id === "pl-sharego") {
+    const link = $("pl-link").value;
+    if (navigator.share) navigator.share({title:"План тренировок", text:"План тренировок. Откройте ссылку и нажмите «Добавить».", url:link}).catch(() => {}); else copyLink();
+    return;
+  }
+  if (id === "pl-prev") { pDate = shiftIso(pDate, -1); renderPlan(); return; }
+  if (id === "pl-next") { pDate = shiftIso(pDate, 1); renderPlan(); return; }
+  if (id === "pl-pick-open") { pMode = "pick"; pQuery = ""; renderPlan(); return; }
+  if (id === "pl-pickdone" || id === "pl-editdone") { pMode = "view"; save(); renderPlan(); return; }
+  if (id === "pl-edit") { pMode = "edit"; renderPlan(); return; }
+  if (id === "pl-golib") { pTab = "lib"; pMode = "view"; renderPlan(); return; }
+  if (id === "pl-all") {
+    const all = pDay(pDate) === pTotal(pDate);
+    pList(pDate).forEach(x => { for (let i = 0; i < x.s; i++) { const k = pkey(pDate, x.id, i); if (all) delete S.pdone[k]; else S.pdone[k] = 1; } });
+    save(); renderPlan(); return;
+  }
+  if (t.dataset.add) {
+    const x = S.lib.find(v => v.id === +t.dataset.add); if (!x) return;
+    S.pid++; (S.plan[pDate] = S.plan[pDate] || []).push({id:S.pid, lid:x.id, n:x.n, s:x.s, r:x.r, u:x.u});
+    save(); $("pl-pick").innerHTML = pickList(); toast("Добавлено: " + x.n); return;
+  }
+  if (t.classList.contains("set")) {
+    const k = pkey(pDate, +t.dataset.p, +t.dataset.t);
+    if (S.pdone[k]) delete S.pdone[k]; else S.pdone[k] = 1;
+    save(); renderPlan(); return;
+  }
+  if (t.classList.contains("pdel")) {
+    const eid = +t.dataset.id;
+    S.plan[pDate] = pList(pDate).filter(x => x.id !== eid);
+    Object.keys(S.pdone).forEach(k => { if (k.indexOf(pDate + "|" + eid + "|") === 0) delete S.pdone[k]; });
+    if (!S.plan[pDate].length) delete S.plan[pDate];
+    save(); renderPlan(); return;
+  }
+  if (t.dataset.ledit) { libEdit = +t.dataset.ledit; renderPlan(); window.scrollTo(0, 0); return; }
+  if (t.dataset.ldel) {
+    const x = S.lib.find(v => v.id === +t.dataset.ldel);
+    if (x && confirm("Удалить «" + x.n + "» из справочника? Уже составленные планы не изменятся.")) {
+      S.lib = S.lib.filter(v => v.id !== x.id); if (libEdit === x.id) libEdit = null; save(); renderPlan();
+    }
+    return;
+  }
+  if (id === "lb-cancel") { libEdit = null; renderPlan(); }
+});
+$("pl-body").addEventListener("submit", e => {
+  e.preventDefault();
+  const n = $("lb-n").value.trim(), s = Math.round(+$("lb-s").value), r = Math.round(+$("lb-r").value), u = $("lb-u").value;
+  if (!n) { toast("Введите название"); $("lb-n").focus(); return; }
+  if (!(s >= 1 && s <= 20)) { toast("Подходов должно быть от 1 до 20"); return; }
+  if (!(r >= 1)) { toast("Введите число повторов"); return; }
+  if (libEdit != null) {
+    const x = S.lib.find(v => v.id === libEdit); if (x) Object.assign(x, {n, s, r, u});
+    libEdit = null; toast("Сохранено");
+  } else {
+    S.lib.push({id:S.lib.reduce((m, v) => Math.max(m, v.id), 0) + 1, n, s, r, u}); toast("Добавлено в справочник");
+  }
+  save(); renderPlan();
+});
+$("pl-body").addEventListener("change", e => {
+  const el = e.target;
+  if (el.id === "pl-date") { if (el.value) { pDate = el.value; renderPlan(); } return; }
+  if (!el.dataset.f) return;
+  const x = pList(pDate).find(v => v.id === +el.dataset.id); if (!x) return;
+  const f = el.dataset.f;
+  if (f === "u") x.u = el.value;
+  else { const v = Math.round(+el.value); if (v >= 1 && (f !== "s" || v <= 20)) x[f] = v; else el.value = x[f]; }
+  save();
+});
+$("pl-body").addEventListener("input", e => {
+  if (e.target.id === "pl-q") { pQuery = e.target.value; $("pl-pick").innerHTML = pickList(); }
+});
+
+
+/* ---------- Отправка и получение плана ---------- */
+const b64e = o => { const bytes = new TextEncoder().encode(JSON.stringify(o)); let bin = ""; bytes.forEach(b => bin += String.fromCharCode(b)); return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); };
+const b64d = t => { t = t.replace(/-/g, "+").replace(/_/g, "/"); while (t.length % 4) t += "="; const bin = atob(t); return JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0)))); };
+
+function sharePack() {
+  const today = iso(new Date());
+  const dates = pScope === "day" ? [pDate] : Object.keys(S.plan).filter(d => d >= today).sort();
+  const p = []; let n = 0;
+  dates.forEach(d => { const L = pList(d); if (L.length) { p.push([d, L.map(x => [x.n, x.s, x.r, x.u])]); n += L.length; } });
+  return {p, n, days:p.length};
+}
+function shareBody() {
+  const pk = sharePack();
+  const link = pk.n ? location.origin + location.pathname + "#p=" + b64e({v:1, i:pShareId, p:pk.p}) : "";
+  let h = `<div class="card"><h3>Отправить план</h3><div class="seg two" style="margin-bottom:10px"><button data-sc="all" class="${pScope === "all" ? "sel" : ""}"><b>Все дни с сегодня</b></button><button data-sc="day" class="${pScope === "day" ? "sel" : ""}"><b>Только ${fmt(parseIso(pDate))}</b></button></div>`;
+  if (!pk.n) h += `<p class="note">В выбранном диапазоне нет упражнений. Составьте план и вернитесь сюда.</p>`;
+  else h += `<p class="note" style="margin-top:0">Будет отправлено: дней ${pk.days}, упражнений ${pk.n}. Получатель откроет ссылку в приложении и нажмёт «Добавить».</p><label for="pl-link">Ссылка</label><input type="text" id="pl-link" readonly value="${esc(link)}"><div class="actions"><button class="btn primary wide" id="pl-sharego">Поделиться</button><button class="btn wide" id="pl-copy">Скопировать</button></div>`;
+  return h + `</div><div class="actions"><button class="btn wide" id="pl-share-back">Назад</button></div>`;
+}
+function copyLink() {
+  const el = $("pl-link"); if (!el) return;
+  const ok = () => toast("Ссылка скопирована");
+  const old = () => { el.focus(); el.select(); try { document.execCommand("copy"); ok(); } catch (e) { toast("Выделите ссылку и скопируйте вручную"); } };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(el.value).then(ok, old); else old();
+}
+
+let incoming = null;
+function validatePack(o) {
+  if (!o || o.v !== 1 || !Array.isArray(o.p) || o.p.length > 62) throw 0;
+  const days = [];
+  o.p.forEach(row => {
+    if (!Array.isArray(row) || !/^\d{4}-\d{2}-\d{2}$/.test(row[0]) || !Array.isArray(row[1]) || row[1].length > 30) throw 0;
+    const L = [];
+    row[1].forEach(e => {
+      if (!Array.isArray(e)) throw 0;
+      const n = String(e[0]).trim().slice(0, 60), s = Math.round(+e[1]), r = Math.round(+e[2]), u = e[3] === "сек" ? "сек" : "раз";
+      if (!n || !(s >= 1 && s <= 20) || !(r >= 1 && r <= 99999)) throw 0;
+      L.push({n, s, r, u});
+    });
+    if (L.length) days.push([row[0], L]);
+  });
+  if (!days.length) throw 0;
+  days.sort((a, b) => a[0] < b[0] ? -1 : 1);
+  return {id:String(o.i || "").slice(0, 12), days};
+}
+function closeModal() { $("modal").classList.remove("show"); incoming = null; }
+function showIncoming() {
+  const inc = incoming, cnt = inc.days.reduce((a, d) => a + d[1].length, 0);
+  const seen = inc.id && S.imp.indexOf(inc.id) >= 0;
+  $("modal-body").innerHTML = `<h3 id="modal-t">Получен план тренировок</h3>
+    <p style="margin:0">Дней: ${inc.days.length}, упражнений: ${cnt}.${seen ? " Эту ссылку вы уже открывали, повторное «Добавить» создаст дубли." : ""}</p>
+    <ul>${inc.days.slice(0, 8).map(d => `<li>${WDS[parseIso(d[0]).getDay()]} ${fmt(parseIso(d[0]))}: ${d[1].length} упр.</li>`).join("")}${inc.days.length > 8 ? "<li>и другие дни</li>" : ""}</ul>
+    <button class="btn primary" id="im-add">Добавить к имеющимся</button>
+    <button class="btn" id="im-rep">Заменить на эти даты</button>
+    <button class="btn" id="im-cancel">Отмена</button>
+    <p class="note">«Заменить» подходит, если вы получили исправленный план: отметки неизменённых упражнений сохранятся.</p>`;
+  $("modal").classList.add("show"); $("im-add").focus();
+}
+function applyIncoming(mode) {
+  const inc = incoming; if (!inc) return;
+  inc.days.forEach(([d, L]) => {
+    const cur = pList(d);
+    if (mode === "add") {
+      L.forEach(x => { S.pid++; (S.plan[d] = S.plan[d] || []).push({id:S.pid, n:x.n, s:x.s, r:x.r, u:x.u}); });
+    } else {
+      const used = new Set(), res = [];
+      L.forEach(x => {
+        const k = cur.findIndex((c, i) => !used.has(i) && c.n === x.n && c.s === x.s && c.r === x.r && c.u === x.u);
+        if (k >= 0) { used.add(k); res.push(cur[k]); } else { S.pid++; res.push({id:S.pid, n:x.n, s:x.s, r:x.r, u:x.u}); }
+      });
+      cur.forEach((c, i) => { if (!used.has(i)) Object.keys(S.pdone).forEach(k => { if (k.indexOf(d + "|" + c.id + "|") === 0) delete S.pdone[k]; }); });
+      S.plan[d] = res;
+    }
+  });
+  if (inc.id && S.imp.indexOf(inc.id) < 0) S.imp = S.imp.concat(inc.id).slice(-50);
+  save();
+  const first = inc.days[0][0];
+  closeModal();
+  document.querySelector('nav button[data-tab="plan"]').click();
+  pDate = first; renderPlan(); toast("План добавлен");
+}
+$("modal-body").addEventListener("click", e => {
+  const id = e.target.id;
+  if (id === "im-add") applyIncoming("add"); else if (id === "im-rep") applyIncoming("replace"); else if (id === "im-cancel") closeModal();
+});
+function readIncoming() {
+  const m = location.hash.match(/^#p=([A-Za-z0-9_-]+)$/); if (!m) return;
+  history.replaceState(null, "", location.pathname + location.search);
+  try { incoming = validatePack(b64d(m[1])); } catch (e) { toast("Ссылка повреждена или неполная"); return; }
+  showIncoming();
+}
+window.addEventListener("hashchange", readIncoming);
+
+/* ---------- Общее ---------- */
+let tt;
+function toast(t) { const el = $("toast"); el.textContent = t; el.classList.add("show"); clearTimeout(tt); tt = setTimeout(() => el.classList.remove("show"), 2600); }
+document.querySelectorAll("nav button").forEach(b => b.addEventListener("click", () => {
+  const t = b.dataset.tab;
+  $("v-train").hidden = t !== "train"; $("v-rec").hidden = t !== "rec"; $("v-abs").hidden = t !== "abs"; $("v-plan").hidden = t !== "plan";
+  document.querySelectorAll("nav button").forEach(x => x.removeAttribute("aria-current"));
+  b.setAttribute("aria-current", "page");
+  window.scrollTo(0, 0);
+  if (t === "rec") renderRec(); else if (t === "abs") { absEdit = false; absDate = iso(new Date()); renderAbs(); } else if (t === "plan") { pMode = "view"; pDate = iso(new Date()); libEdit = null; renderPlan(); } else renderTrain();
+}));
+
+renderTrain(); renderRec(); renderAbs(); renderPlan(); readIncoming();
+if (navigator.storage && navigator.storage.persist) navigator.storage.persist();
+if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+</script>
+</body>
+</html>
