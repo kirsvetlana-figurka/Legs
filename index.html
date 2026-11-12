@@ -130,6 +130,13 @@ ul.plain{list-style:none;margin:0;padding:0}
 .libcard .nm{flex:1;font-weight:600}
 .libcard .nm small{display:block;font-weight:400;font-size:14px;color:var(--mute)}
 .libcard .btn{min-height:44px;padding:0 12px;font-size:14px}
+#modal{position:fixed;inset:0;background:rgba(15,27,45,.6);display:none;align-items:center;justify-content:center;padding:16px;z-index:20}
+#modal.show{display:flex}
+.modal-card{background:#fff;border-radius:16px;padding:18px;max-width:420px;width:100%;max-height:85vh;overflow:auto}
+.modal-card h3{margin:0 0 8px;font-size:19px}
+.modal-card ul{margin:8px 0 12px;padding-left:18px;color:var(--mute);font-size:14px}
+.modal-card .btn{width:100%;margin-top:8px}
+input[readonly]{background:#F2F5F8;font-size:13px}
 #toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);
   max-width:90%;padding:12px 18px;border-radius:12px;background:var(--ink);color:#fff;font-weight:600;
   opacity:0;pointer-events:none;transition:opacity .2s}
@@ -209,6 +216,7 @@ ul.plain{list-style:none;margin:0;padding:0}
   <button data-tab="abs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="18" rx="3"/><path d="M12 3v18M6 9h12M6 15h12"/></svg>Пресс</button>
   <button data-tab="plan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6h1M4 12h1M4 18h1"/></svg>План</button>
 </nav>
+<div id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-t"><div class="modal-card" id="modal-body"></div></div>
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -255,6 +263,7 @@ function fixAbs(o) {
   if (!o.plan || typeof o.plan !== "object" || Array.isArray(o.plan)) o.plan = {};
   if (!o.pdone || typeof o.pdone !== "object" || Array.isArray(o.pdone)) o.pdone = {};
   if (typeof o.pid !== "number") o.pid = 0;
+  if (!Array.isArray(o.imp)) o.imp = [];
 }
 let S = load();
 function migrate() {
@@ -436,7 +445,7 @@ $("file").addEventListener("change", () => {
       const o = JSON.parse(rd.result);
       if (!o || typeof o.done !== "object" || !Array.isArray(o.rec)) throw 0;
       if (!confirm("Заменить текущие данные данными из копии?")) return;
-      S = {done:o.done, rec:o.rec, abs:o.abs, lib:o.lib, plan:o.plan, pdone:o.pdone, pid:o.pid}; fixAbs(S); migrate(); save(); renderTrain(); renderRec(); renderAbs(); renderPlan(); toast("Данные загружены");
+      S = {done:o.done, rec:o.rec, abs:o.abs, lib:o.lib, plan:o.plan, pdone:o.pdone, pid:o.pid, imp:o.imp}; fixAbs(S); migrate(); save(); renderTrain(); renderRec(); renderAbs(); renderPlan(); toast("Данные загружены");
     } catch (e) { toast("Файл не подходит"); }
   };
   rd.readAsText(f); $("file").value = "";
@@ -544,6 +553,7 @@ $("abs-body").addEventListener("change", e => {
 });
 
 /* ---------- План и справочник ---------- */
+let pScope = "all", pShareId = "";
 let pTab = "plan", pDate = iso(new Date()), pMode = "view", pQuery = "", libEdit = null;
 const pkey = (d, id, t) => d + "|" + id + "|" + t;
 const pList = d => S.plan[d] || [];
@@ -591,6 +601,7 @@ function pickList() {
 }
 
 function planBody() {
+  if (pMode === "share") return shareBody();
   const L = pList(pDate);
   if (pMode === "pick") {
     if (!S.lib.length) return `<div class="restcard"><b>Справочник пуст</b>Сначала добавьте упражнения в справочник.</div><div class="actions"><button class="btn primary wide" id="pl-golib">Открыть справочник</button><button class="btn wide" id="pl-pickdone">Назад</button></div>`;
@@ -608,7 +619,7 @@ function planBody() {
   }
   let h = `<div class="daterow"><button id="pl-prev" aria-label="Предыдущий день">‹</button><input type="date" id="pl-date" value="${pDate}" aria-label="Дата"><button id="pl-next" aria-label="Следующий день">›</button></div>`;
   if (!L.length) {
-    return h + `<div class="restcard"><b>План на этот день пуст</b>Добавьте упражнения из справочника.</div><div class="actions"><button class="btn primary wide" id="pl-pick-open">Добавить из справочника</button></div>`;
+    return h + `<div class="restcard"><b>План на этот день пуст</b>Добавьте упражнения из справочника.</div><div class="actions"><button class="btn primary wide" id="pl-pick-open">Добавить из справочника</button></div><div class="actions"><button class="btn wide" id="pl-share">Отправить план</button></div>`;
   }
   const tot = pTotal(pDate), all = pDay(pDate) === tot;
   if (all) h += `<p class="banner">День выполнен</p>`;
@@ -622,7 +633,7 @@ function planBody() {
     }
     h += `<li><div class="ex${on ? " on" : ""}"><div class="ex-h"><span class="nm">${esc(x.n)}<small>сделано ${c} из ${x.s}</small></span><span class="vol">${x.s}×${x.r}${unitSm(x)}</span></div><div class="sets">${sets}</div></div></li>`;
   });
-  return h + `</ul><div class="actions"><button class="btn primary wide" id="pl-pick-open">Добавить из справочника</button></div><div class="actions"><button class="btn wide" id="pl-all">${all ? "Снять все отметки" : "Отметить всё"}</button><button class="btn wide" id="pl-edit">Изменить</button></div>`;
+  return h + `</ul><div class="actions"><button class="btn primary wide" id="pl-pick-open">Добавить из справочника</button></div><div class="actions"><button class="btn wide" id="pl-all">${all ? "Снять все отметки" : "Отметить всё"}</button><button class="btn wide" id="pl-edit">Изменить</button></div><div class="actions"><button class="btn wide" id="pl-share">Отправить план</button></div>`;
 }
 
 function libBody() {
@@ -653,6 +664,15 @@ $("pl-strip").addEventListener("click", e => {
 $("pl-body").addEventListener("click", e => {
   const t = e.target.closest("button"); if (!t) return;
   const id = t.id;
+  if (id === "pl-share") { pMode = "share"; pShareId = Math.random().toString(36).slice(2, 8); pScope = Object.keys(S.plan).some(d => d >= iso(new Date()) && pList(d).length) ? "all" : "day"; renderPlan(); return; }
+  if (id === "pl-share-back") { pMode = "view"; renderPlan(); return; }
+  if (t.dataset.sc) { pScope = t.dataset.sc; renderPlan(); return; }
+  if (id === "pl-copy") { copyLink(); return; }
+  if (id === "pl-sharego") {
+    const link = $("pl-link").value;
+    if (navigator.share) navigator.share({title:"План тренировок", text:"План тренировок. Откройте ссылку и нажмите «Добавить».", url:link}).catch(() => {}); else copyLink();
+    return;
+  }
   if (id === "pl-prev") { pDate = shiftIso(pDate, -1); renderPlan(); return; }
   if (id === "pl-next") { pDate = shiftIso(pDate, 1); renderPlan(); return; }
   if (id === "pl-pick-open") { pMode = "pick"; pQuery = ""; renderPlan(); return; }
@@ -719,6 +739,100 @@ $("pl-body").addEventListener("input", e => {
   if (e.target.id === "pl-q") { pQuery = e.target.value; $("pl-pick").innerHTML = pickList(); }
 });
 
+
+/* ---------- Отправка и получение плана ---------- */
+const b64e = o => { const bytes = new TextEncoder().encode(JSON.stringify(o)); let bin = ""; bytes.forEach(b => bin += String.fromCharCode(b)); return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); };
+const b64d = t => { t = t.replace(/-/g, "+").replace(/_/g, "/"); while (t.length % 4) t += "="; const bin = atob(t); return JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0)))); };
+
+function sharePack() {
+  const today = iso(new Date());
+  const dates = pScope === "day" ? [pDate] : Object.keys(S.plan).filter(d => d >= today).sort();
+  const p = []; let n = 0;
+  dates.forEach(d => { const L = pList(d); if (L.length) { p.push([d, L.map(x => [x.n, x.s, x.r, x.u])]); n += L.length; } });
+  return {p, n, days:p.length};
+}
+function shareBody() {
+  const pk = sharePack();
+  const link = pk.n ? location.origin + location.pathname + "#p=" + b64e({v:1, i:pShareId, p:pk.p}) : "";
+  let h = `<div class="card"><h3>Отправить план</h3><div class="seg two" style="margin-bottom:10px"><button data-sc="all" class="${pScope === "all" ? "sel" : ""}"><b>Все дни с сегодня</b></button><button data-sc="day" class="${pScope === "day" ? "sel" : ""}"><b>Только ${fmt(parseIso(pDate))}</b></button></div>`;
+  if (!pk.n) h += `<p class="note">В выбранном диапазоне нет упражнений. Составьте план и вернитесь сюда.</p>`;
+  else h += `<p class="note" style="margin-top:0">Будет отправлено: дней ${pk.days}, упражнений ${pk.n}. Получатель откроет ссылку в приложении и нажмёт «Добавить».</p><label for="pl-link">Ссылка</label><input type="text" id="pl-link" readonly value="${esc(link)}"><div class="actions"><button class="btn primary wide" id="pl-sharego">Поделиться</button><button class="btn wide" id="pl-copy">Скопировать</button></div>`;
+  return h + `</div><div class="actions"><button class="btn wide" id="pl-share-back">Назад</button></div>`;
+}
+function copyLink() {
+  const el = $("pl-link"); if (!el) return;
+  const ok = () => toast("Ссылка скопирована");
+  const old = () => { el.focus(); el.select(); try { document.execCommand("copy"); ok(); } catch (e) { toast("Выделите ссылку и скопируйте вручную"); } };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(el.value).then(ok, old); else old();
+}
+
+let incoming = null;
+function validatePack(o) {
+  if (!o || o.v !== 1 || !Array.isArray(o.p) || o.p.length > 62) throw 0;
+  const days = [];
+  o.p.forEach(row => {
+    if (!Array.isArray(row) || !/^\d{4}-\d{2}-\d{2}$/.test(row[0]) || !Array.isArray(row[1]) || row[1].length > 30) throw 0;
+    const L = [];
+    row[1].forEach(e => {
+      if (!Array.isArray(e)) throw 0;
+      const n = String(e[0]).trim().slice(0, 60), s = Math.round(+e[1]), r = Math.round(+e[2]), u = e[3] === "сек" ? "сек" : "раз";
+      if (!n || !(s >= 1 && s <= 20) || !(r >= 1 && r <= 99999)) throw 0;
+      L.push({n, s, r, u});
+    });
+    if (L.length) days.push([row[0], L]);
+  });
+  if (!days.length) throw 0;
+  days.sort((a, b) => a[0] < b[0] ? -1 : 1);
+  return {id:String(o.i || "").slice(0, 12), days};
+}
+function closeModal() { $("modal").classList.remove("show"); incoming = null; }
+function showIncoming() {
+  const inc = incoming, cnt = inc.days.reduce((a, d) => a + d[1].length, 0);
+  const seen = inc.id && S.imp.indexOf(inc.id) >= 0;
+  $("modal-body").innerHTML = `<h3 id="modal-t">Получен план тренировок</h3>
+    <p style="margin:0">Дней: ${inc.days.length}, упражнений: ${cnt}.${seen ? " Эту ссылку вы уже открывали, повторное «Добавить» создаст дубли." : ""}</p>
+    <ul>${inc.days.slice(0, 8).map(d => `<li>${WDS[parseIso(d[0]).getDay()]} ${fmt(parseIso(d[0]))}: ${d[1].length} упр.</li>`).join("")}${inc.days.length > 8 ? "<li>и другие дни</li>" : ""}</ul>
+    <button class="btn primary" id="im-add">Добавить к имеющимся</button>
+    <button class="btn" id="im-rep">Заменить на эти даты</button>
+    <button class="btn" id="im-cancel">Отмена</button>
+    <p class="note">«Заменить» подходит, если вы получили исправленный план: отметки неизменённых упражнений сохранятся.</p>`;
+  $("modal").classList.add("show"); $("im-add").focus();
+}
+function applyIncoming(mode) {
+  const inc = incoming; if (!inc) return;
+  inc.days.forEach(([d, L]) => {
+    const cur = pList(d);
+    if (mode === "add") {
+      L.forEach(x => { S.pid++; (S.plan[d] = S.plan[d] || []).push({id:S.pid, n:x.n, s:x.s, r:x.r, u:x.u}); });
+    } else {
+      const used = new Set(), res = [];
+      L.forEach(x => {
+        const k = cur.findIndex((c, i) => !used.has(i) && c.n === x.n && c.s === x.s && c.r === x.r && c.u === x.u);
+        if (k >= 0) { used.add(k); res.push(cur[k]); } else { S.pid++; res.push({id:S.pid, n:x.n, s:x.s, r:x.r, u:x.u}); }
+      });
+      cur.forEach((c, i) => { if (!used.has(i)) Object.keys(S.pdone).forEach(k => { if (k.indexOf(d + "|" + c.id + "|") === 0) delete S.pdone[k]; }); });
+      S.plan[d] = res;
+    }
+  });
+  if (inc.id && S.imp.indexOf(inc.id) < 0) S.imp = S.imp.concat(inc.id).slice(-50);
+  save();
+  const first = inc.days[0][0];
+  closeModal();
+  document.querySelector('nav button[data-tab="plan"]').click();
+  pDate = first; renderPlan(); toast("План добавлен");
+}
+$("modal-body").addEventListener("click", e => {
+  const id = e.target.id;
+  if (id === "im-add") applyIncoming("add"); else if (id === "im-rep") applyIncoming("replace"); else if (id === "im-cancel") closeModal();
+});
+function readIncoming() {
+  const m = location.hash.match(/^#p=([A-Za-z0-9_-]+)$/); if (!m) return;
+  history.replaceState(null, "", location.pathname + location.search);
+  try { incoming = validatePack(b64d(m[1])); } catch (e) { toast("Ссылка повреждена или неполная"); return; }
+  showIncoming();
+}
+window.addEventListener("hashchange", readIncoming);
+
 /* ---------- Общее ---------- */
 let tt;
 function toast(t) { const el = $("toast"); el.textContent = t; el.classList.add("show"); clearTimeout(tt); tt = setTimeout(() => el.classList.remove("show"), 2600); }
@@ -731,7 +845,7 @@ document.querySelectorAll("nav button").forEach(b => b.addEventListener("click",
   if (t === "rec") renderRec(); else if (t === "abs") { absEdit = false; absDate = iso(new Date()); renderAbs(); } else if (t === "plan") { pMode = "view"; pDate = iso(new Date()); libEdit = null; renderPlan(); } else renderTrain();
 }));
 
-renderTrain(); renderRec(); renderAbs(); renderPlan();
+renderTrain(); renderRec(); renderAbs(); renderPlan(); readIncoming();
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist();
 if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
 </script>
