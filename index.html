@@ -3,46 +3,49 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0F1B2D">
+<meta name="theme-color" content="#4A2237">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Тренировки ног</title>
+<title>Тренировки фигурка</title>
 <style>
 :root{
-  --ink:#0F1B2D; --paper:#F2F5F8; --card:#FFFFFF; --line:#D9E0E8; --mute:#5B6B7F;
-  --blue:#1D6FD8; --green:#2A9D6A; --gold:#B7810A; --gold-bg:#FFF1CC; --red:#B3261E;
+  --ink:#2B1020; --paper:#6B3550; --hdr:#4A2237; --card:#FFFFFF; --line:#E8D5DF; --mute:#6E5563;
+  --accent:#E9A9C2; --blue:#A02C5C; --green:#2A9D6A; --gold:#B7810A; --gold-bg:#FFF1CC; --red:#B3261E;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--paper);color:var(--ink)}
 body{font:16px/1.4 Roboto,"Segoe UI",system-ui,sans-serif;padding-bottom:calc(72px + env(safe-area-inset-bottom))}
 button,input,select{font:inherit;color:inherit}
 button{cursor:pointer}
-:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+:focus-visible{outline:3px solid var(--ink);outline-offset:2px;box-shadow:0 0 0 5px #fff}
 .view[hidden]{display:none}
 .num{font-variant-numeric:tabular-nums}
 
 /* верхняя панель */
-.top{background:var(--ink);color:#fff;padding:calc(14px + env(safe-area-inset-top)) 14px 12px}
+.top{background:var(--hdr);color:#fff;padding:calc(14px + env(safe-area-inset-top)) 14px 12px}
 .top-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
 .top h1{margin:0;font-size:22px;font-weight:700;letter-spacing:.2px}
-.total{font-size:14px;color:#B8C4D6}
+.total{font-size:14px;color:#EBD0DC}
+.total:empty::before{content:"\00a0"}
+.brand{display:flex;align-items:center;gap:12px}
+.bunny{width:44px;height:51px;flex:0 0 auto}
 .total b{color:#fff;font-size:18px}
 
 /* лента недель — главный элемент */
 .strip{display:flex;gap:6px;overflow-x:auto;padding:12px 0 4px;scrollbar-width:none;scroll-snap-type:x proximity}
 .strip::-webkit-scrollbar{display:none}
-.chip{flex:0 0 auto;width:44px;height:56px;border-radius:10px;border:1.5px solid #3A4A63;
+.chip{flex:0 0 auto;width:44px;height:56px;border-radius:10px;border:1.5px solid #86586F;
   background:linear-gradient(to top,var(--green) var(--p,0%),rgba(255,255,255,.06) var(--p,0%));
   color:#fff;font-weight:700;font-size:17px;display:grid;place-items:center;position:relative;scroll-snap-align:center}
-.chip.rest{border-style:dashed;color:#8FA0B8;background:none}
+.chip.rest{border-style:dashed;color:#CDA3B7;background:none}
 .chip.sel{border-color:#fff;box-shadow:0 0 0 2px #fff}
 .chip.sel::after{content:"";position:absolute;bottom:-9px;width:18px;height:3px;border-radius:2px;background:#fff}
 
 main{padding:14px}
 .weekhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:2px 0 12px}
-.weekhead h2{margin:0;font-size:20px}
-.weekhead .dates{color:var(--mute);font-size:14px}
+.weekhead h2{margin:0;font-size:20px;color:#fff}
+.weekhead .dates{color:#EBD0DC;font-size:14px}
 .pill{display:inline-block;padding:4px 12px;border-radius:999px;background:var(--ink);color:#fff;font-size:14px;font-weight:600}
 
 .seg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
@@ -50,8 +53,8 @@ main{padding:14px}
   display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.2}
 .seg button b{font-size:17px}
 .seg button span{font-size:13px;color:var(--mute)}
-.seg button.sel{background:var(--blue);border-color:var(--blue);color:#fff}
-.seg button.sel span{color:#DCE9FB}
+.seg button.sel{background:var(--accent);border-color:var(--accent);color:var(--ink)}
+.seg button.sel span{color:#4A2237}
 .seg button.full:not(.sel){border-color:var(--green)}
 .seg button.full b::after{content:" ✓";color:var(--green)}
 .seg button.full.sel b::after{color:#fff}
@@ -70,7 +73,7 @@ ul.list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
 .ex.on .nm,.ex.on .vol{color:#14573A}
 .actions{display:flex;gap:8px;margin-top:12px}
 .btn{min-height:48px;padding:0 18px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);font-weight:600}
-.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--ink)}
 .btn.danger{color:var(--red)}
 .btn.wide{flex:1}
 .restcard{padding:22px 16px;border:2px dashed #B8C4D6;border-radius:14px;text-align:center;color:var(--mute);background:var(--card)}
@@ -106,7 +109,7 @@ nav button{min-height:64px;border:0;background:none;font-size:13px;font-weight:6
 nav button svg{width:24px;height:24px}
 nav button[aria-current=page]{color:var(--blue)}
 .dchip{display:flex;flex-direction:column;gap:1px}
-.dchip small{font-size:11px;font-weight:500;color:#B8C4D6}
+.dchip small{font-size:11px;font-weight:500;color:#EBD0DC}
 .dchip.sel small{color:#fff}
 .daterow{display:flex;gap:8px;margin-bottom:12px}
 .daterow input{flex:1}
@@ -124,7 +127,7 @@ nav button[aria-current=page]{color:var(--blue)}
 #ch-range button b{font-size:15px}
 .chart svg{width:100%;height:auto;display:block}
 .chart [data-i]{cursor:pointer}
-.chip.has::before{content:"";position:absolute;top:5px;right:5px;width:6px;height:6px;border-radius:50%;background:#7FB3FF}
+.chip.has::before{content:"";position:absolute;top:5px;right:5px;width:6px;height:6px;border-radius:50%;background:#FFD166}
 .pickrow{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
 .pickrow:first-child{border-top:0}
 .pickrow .nm{flex:1;font-weight:600}
@@ -142,6 +145,16 @@ ul.plain{list-style:none;margin:0;padding:0}
 .modal-card ul{margin:8px 0 12px;padding-left:18px;color:var(--mute);font-size:14px}
 .modal-card .btn{width:100%;margin-top:8px}
 input[readonly]{background:#F2F5F8;font-size:13px}
+.tmbtn{margin-left:auto;min-height:48px;padding:0 14px;border-radius:24px;border:1.5px solid var(--line);background:#fff;font-weight:600;display:flex;align-items:center;gap:6px;color:var(--ink)}
+.tmbtn svg{width:20px;height:20px}
+.sets{align-items:center}
+.tm-clock{font-size:68px;font-weight:700;text-align:center;font-variant-numeric:tabular-nums;margin:6px 0 10px;line-height:1.1}
+.tm-clock.done{color:var(--green)}
+.tm-bar{height:10px;border-radius:5px;background:#EBDDE4;overflow:hidden}
+.tm-bar span{display:block;height:100%;width:0;background:var(--blue);transition:width .25s linear}
+.tm-msg{text-align:center;font-size:16px;margin:10px 0 4px;color:var(--mute);min-height:24px}
+.tm-msg.done{color:var(--green);font-weight:700}
+@media (prefers-reduced-motion:reduce){.tm-bar span{transition:none}}
 #toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);
   max-width:90%;padding:12px 18px;border-radius:12px;background:var(--ink);color:#fff;font-weight:600;
   opacity:0;pointer-events:none;transition:opacity .2s}
@@ -150,10 +163,31 @@ input[readonly]{background:#F2F5F8;font-size:13px}
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="bunny" viewBox="0 0 120 140"><g stroke="#EBC3D3" stroke-width="1.6" stroke-linejoin="round">
+<ellipse cx="44" cy="34" rx="13" ry="31" transform="rotate(-7 44 34)" fill="#fff"/>
+<ellipse cx="76" cy="34" rx="13" ry="31" transform="rotate(7 76 34)" fill="#fff"/>
+</g>
+<ellipse cx="44" cy="36" rx="6.5" ry="22" transform="rotate(-7 44 36)" fill="#FFB3CC"/>
+<ellipse cx="76" cy="36" rx="6.5" ry="22" transform="rotate(7 76 36)" fill="#FFB3CC"/>
+<g stroke="#EBC3D3" stroke-width="1.6" stroke-linejoin="round">
+<ellipse cx="60" cy="117" rx="37" ry="25" fill="#fff"/>
+<ellipse cx="60" cy="79" rx="35" ry="30" fill="#fff"/>
+<ellipse cx="45" cy="131" rx="10" ry="6.5" fill="#fff"/>
+<ellipse cx="75" cy="131" rx="10" ry="6.5" fill="#fff"/>
+</g>
+<path d="M27 71 Q60 55 93 71" fill="none" stroke="#F07BA5" stroke-width="5.5" stroke-linecap="round"/>
+<circle cx="41" cy="88" r="5.5" fill="#FFC2D6" opacity=".75"/>
+<circle cx="79" cy="88" r="5.5" fill="#FFC2D6" opacity=".75"/>
+<circle cx="48" cy="80" r="4.2" fill="#2B1020"/><circle cx="72" cy="80" r="4.2" fill="#2B1020"/>
+<circle cx="49.5" cy="78.5" r="1.4" fill="#fff"/><circle cx="73.5" cy="78.5" r="1.4" fill="#fff"/>
+<ellipse cx="60" cy="89" rx="4" ry="3" fill="#FF8DB5"/>
+<path d="M60 92 v3 M60 95 q-4 4.5 -8.5 1 M60 95 q4 4.5 8.5 1" fill="none" stroke="#B05A7A" stroke-width="1.6" stroke-linecap="round"/>
+<path d="M36 90 L20 86 M36 94 L21 97 M84 90 L100 86 M84 94 L99 97" stroke="#D7B3C3" stroke-width="1.3" stroke-linecap="round" fill="none"/>
+</symbol></svg>
 
 <section id="v-train" class="view">
   <header class="top">
-    <div class="top-row"><h1>Тренировки ног</h1><div class="total num" id="total"></div></div>
+    <div class="brand"><svg class="bunny" aria-hidden="true"><use href="#bunny"/></svg><div><h1>Тренировки фигурка</h1><div class="total num" id="total"></div></div></div>
     <div class="strip" id="strip" aria-label="Недели"></div>
   </header>
   <main>
@@ -164,7 +198,7 @@ input[readonly]{background:#F2F5F8;font-size:13px}
 
 <section id="v-rec" class="view" hidden>
   <header class="top">
-    <div class="top-row"><h1>Рекорды</h1><div class="total" id="rec-total"></div></div>
+    <div class="brand"><svg class="bunny" aria-hidden="true"><use href="#bunny"/></svg><div><h1>Рекорды</h1><div class="total" id="rec-total"></div></div></div>
   </header>
   <main>
     <form class="card" id="form" novalidate>
@@ -200,7 +234,7 @@ input[readonly]{background:#F2F5F8;font-size:13px}
 
 <section id="v-abs" class="view" hidden>
   <header class="top">
-    <div class="top-row"><h1>Пресс</h1><div class="total num" id="abs-total"></div></div>
+    <div class="brand"><svg class="bunny" aria-hidden="true"><use href="#bunny"/></svg><div><h1>Пресс</h1><div class="total num" id="abs-total"></div></div></div>
     <div class="strip" id="abs-strip" aria-label="Последние дни"></div>
   </header>
   <main>
@@ -211,7 +245,7 @@ input[readonly]{background:#F2F5F8;font-size:13px}
 
 <section id="v-plan" class="view" hidden>
   <header class="top">
-    <div class="top-row"><h1>План</h1><div class="total num" id="pl-total"></div></div>
+    <div class="brand"><svg class="bunny" aria-hidden="true"><use href="#bunny"/></svg><div><h1>План</h1><div class="total num" id="pl-total"></div></div></div>
     <div class="strip" id="pl-strip" aria-label="Дни плана"></div>
   </header>
   <main>
@@ -414,7 +448,7 @@ function spark(v) {
   const W = 300, H = 30, p = 3, mn = Math.min(...v), mx = Math.max(...v), rg = mx - mn || 1;
   const pts = v.map((y, i) => (p + i * (W - 2 * p) / (v.length - 1)).toFixed(1) + "," + (H - p - (y - mn) / rg * (H - 2 * p)).toFixed(1));
   const l = pts[pts.length - 1].split(",");
-  return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="30" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts.join(" ")}" fill="none" stroke="#1D6FD8" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>`;
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="30" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts.join(" ")}" fill="none" stroke="#A02C5C" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>`;
 }
 
 $("f-ex").innerHTML = RX.map((x, i) => `<option value="${i}">${esc(x.n)}</option>`).join("");
@@ -462,6 +496,76 @@ $("file").addEventListener("change", () => {
   };
   rd.readAsText(f); $("file").value = "";
 });
+
+/* ---------- Таймер ---------- */
+const tmBtn = id => `<button class="tmbtn" data-tm="${id}" aria-label="Запустить таймер"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6M12 2v3"/></svg>Таймер</button>`;
+let actx = null, wl = null, tm = null;
+function unlockAudio() { try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === "suspended") actx.resume(); } catch (e) {} }
+function beep(freq, at, dur, vol) {
+  if (!actx) return;
+  const t = actx.currentTime + at, o = actx.createOscillator(), g = actx.createGain();
+  o.type = "sine"; o.frequency.value = freq;
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol || 0.5, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + dur + 0.05);
+}
+function alarm() {
+  [0, 0.35, 0.7].forEach(t => beep(880, t, 0.25, 0.7)); beep(1320, 1.1, 0.6, 0.7);
+  if (navigator.vibrate) navigator.vibrate([300, 150, 300, 150, 500]);
+}
+async function lockScreen() { try { if (navigator.wakeLock) wl = await navigator.wakeLock.request("screen"); } catch (e) {} }
+function unlockScreen() { if (wl) { wl.release().catch(() => {}); wl = null; } }
+const clockTxt = n => Math.floor(n / 60) + ":" + pad(n % 60);
+
+function openTimer(o) {
+  tm = Object.assign({total:o.secs, left:o.secs, run:false, end:0, int:null, done:false}, o);
+  $("modal-body").innerHTML = `<h3 id="modal-t">${esc(o.name)}</h3>
+    <div class="tm-clock" id="tm-clock" role="timer"></div>
+    <div class="tm-bar"><span id="tm-fill"></span></div>
+    <p class="tm-msg" id="tm-msg" aria-live="polite"></p>
+    <button class="btn primary" id="tm-go"></button>
+    <button class="btn" id="tm-mark" hidden></button>
+    <button class="btn" id="tm-reset">Сначала</button>
+    <button class="btn" id="tm-close">Закрыть</button>`;
+  $("modal").classList.add("show"); paintTimer(); $("tm-go").focus();
+}
+function tmNext() { return tm.keys.findIndex(k => !tm.store[k]); }
+function paintTimer() {
+  if (!tm) return;
+  $("tm-clock").textContent = clockTxt(tm.left); $("tm-clock").classList.toggle("done", tm.done);
+  $("tm-fill").style.width = ((tm.total - tm.left) / tm.total * 100) + "%";
+  const i = tmNext();
+  const m = $("tm-msg");
+  m.classList.toggle("done", tm.done);
+  m.textContent = tm.done ? "Время вышло!" : (i < 0 ? "Все подходы уже отмечены" : "Подход " + (i + 1) + " из " + tm.keys.length);
+  $("tm-go").textContent = tm.done ? "Ещё раз" : tm.run ? "Пауза" : (tm.left < tm.total ? "Продолжить" : "Старт");
+  const mk = $("tm-mark"); mk.hidden = !(tm.done && i >= 0); if (!mk.hidden) mk.textContent = "Отметить подход " + (i + 1);
+}
+function tmTick() {
+  if (!tm || !tm.run) return;
+  const left = Math.max(0, Math.ceil((tm.end - Date.now()) / 1000));
+  if (left !== tm.left) { tm.left = left; if (left >= 1 && left <= 3) beep(660, 0, 0.12, 0.4); paintTimer(); }
+  if (left <= 0) { clearInterval(tm.int); tm.run = false; tm.done = true; alarm(); unlockScreen(); paintTimer(); }
+}
+function tmStart() {
+  unlockAudio();
+  if (tm.done) { tm.done = false; tm.left = tm.total; }
+  tm.end = Date.now() + tm.left * 1000; tm.run = true;
+  clearInterval(tm.int); tm.int = setInterval(tmTick, 200); lockScreen(); paintTimer();
+}
+function tmPause() { clearInterval(tm.int); tm.left = Math.max(0, Math.ceil((tm.end - Date.now()) / 1000)); tm.run = false; unlockScreen(); paintTimer(); }
+function tmClose() { if (tm) { clearInterval(tm.int); tm = null; } unlockScreen(); closeModal(); }
+function tmClick(id) {
+  if (id === "tm-go") { if (tm.run) tmPause(); else tmStart(); }
+  else if (id === "tm-reset") { clearInterval(tm.int); tm.run = false; tm.done = false; tm.left = tm.total; unlockScreen(); paintTimer(); }
+  else if (id === "tm-close") tmClose();
+  else if (id === "tm-mark") {
+    const i = tmNext(); if (i < 0) return;
+    tm.store[tm.keys[i]] = 1; save(); tm.after();
+    if (tmNext() < 0) { toast("Все подходы выполнены"); tmClose(); }
+    else { tm.done = false; tm.left = tm.total; paintTimer(); }
+  }
+}
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && tm && tm.run) { tmTick(); lockScreen(); } });
 
 /* ---------- Пресс ---------- */
 const WD = ["воскресенье","понедельник","вторник","среда","четверг","пятница","суббота"];
@@ -515,7 +619,7 @@ function renderAbs() {
       const d = !!S.abs.done[akey(absDate, x.id, t)];
       sets += `<button class="set${d ? " on" : ""}" data-x="${x.id}" data-t="${t}" aria-pressed="${d}" aria-label="${esc(x.n)}, подход ${t + 1} из ${x.s}">${t + 1}</button>`;
     }
-    h += `<li><div class="ex${on ? " on" : ""}"><div class="ex-h"><span class="nm">${esc(x.n)}<small>сделано ${c} из ${x.s}</small></span><span class="vol">${x.s}×${x.r}${x.u === "сек" ? ' <small style="font-size:14px;font-weight:400">сек</small>' : ""}</span></div><div class="sets">${sets}</div></div></li>`;
+    h += `<li><div class="ex${on ? " on" : ""}"><div class="ex-h"><span class="nm">${esc(x.n)}<small>сделано ${c} из ${x.s}</small></span><span class="vol">${x.s}×${x.r}${x.u === "сек" ? ' <small style="font-size:14px;font-weight:400">сек</small>' : ""}</span></div><div class="sets">${sets}${x.u === "сек" ? tmBtn(x.id) : ""}</div></div></li>`;
   });
   h += `</ul><div class="actions"><button class="btn wide" id="abs-all">${aDay(absDate) === tot ? "Снять все отметки" : "Отметить всё"}</button><button class="btn wide" id="abs-edit">Изменить список</button></div>`;
   $("abs-body").innerHTML = h;
@@ -527,6 +631,10 @@ $("abs-strip").addEventListener("click", e => {
 });
 $("abs-body").addEventListener("click", e => {
   const t = e.target.closest("button"); if (!t) return;
+  if (t.dataset.tm) {
+    const x = S.abs.list.find(v => v.id === +t.dataset.tm); if (!x) return;
+    openTimer({name:x.n, secs:x.r, keys:Array.from({length:x.s}, (_, i) => akey(absDate, x.id, i)), store:S.abs.done, after:renderAbs}); return;
+  }
   if (t.id === "abs-prev") { absDate = shiftIso(absDate, -1); renderAbs(); return; }
   if (t.id === "abs-next") { absDate = shiftIso(absDate, 1); renderAbs(); return; }
   if (t.id === "abs-edit") { absEdit = true; renderAbs(); return; }
@@ -643,7 +751,7 @@ function planBody() {
       const d = !!S.pdone[pkey(pDate, x.id, t)];
       sets += `<button class="set${d ? " on" : ""}" data-p="${x.id}" data-t="${t}" aria-pressed="${d}" aria-label="${esc(x.n)}, подход ${t + 1} из ${x.s}">${t + 1}</button>`;
     }
-    h += `<li><div class="ex${on ? " on" : ""}"><div class="ex-h"><span class="nm">${esc(x.n)}<small>сделано ${c} из ${x.s}</small></span><span class="vol">${x.s}×${x.r}${unitSm(x)}</span></div><div class="sets">${sets}</div></div></li>`;
+    h += `<li><div class="ex${on ? " on" : ""}"><div class="ex-h"><span class="nm">${esc(x.n)}<small>сделано ${c} из ${x.s}</small></span><span class="vol">${x.s}×${x.r}${unitSm(x)}</span></div><div class="sets">${sets}${x.u === "сек" ? tmBtn(x.id) : ""}</div></div></li>`;
   });
   return h + `</ul><div class="actions"><button class="btn primary wide" id="pl-pick-open">Добавить из справочника</button></div><div class="actions"><button class="btn wide" id="pl-all">${all ? "Снять все отметки" : "Отметить всё"}</button><button class="btn wide" id="pl-edit">Изменить</button></div><div class="actions"><button class="btn wide" id="pl-share">Отправить план</button></div>`;
 }
@@ -676,6 +784,10 @@ $("pl-strip").addEventListener("click", e => {
 $("pl-body").addEventListener("click", e => {
   const t = e.target.closest("button"); if (!t) return;
   const id = t.id;
+  if (t.dataset.tm) {
+    const x = pList(pDate).find(v => v.id === +t.dataset.tm); if (!x) return;
+    openTimer({name:x.n, secs:x.r, keys:Array.from({length:x.s}, (_, i) => pkey(pDate, x.id, i)), store:S.pdone, after:renderPlan}); return;
+  }
   if (id === "pl-share") { pMode = "share"; pShareId = Math.random().toString(36).slice(2, 8); pScope = Object.keys(S.plan).some(d => d >= iso(new Date()) && pList(d).length) ? "all" : "day"; renderPlan(); return; }
   if (id === "pl-share-back") { pMode = "view"; renderPlan(); return; }
   if (t.dataset.sc) { pScope = t.dataset.sc; renderPlan(); return; }
@@ -835,6 +947,7 @@ function applyIncoming(mode) {
 }
 $("modal-body").addEventListener("click", e => {
   const id = e.target.id;
+  if (id && id.indexOf("tm-") === 0 && tm) { tmClick(id); return; }
   if (id === "im-add") applyIncoming("add"); else if (id === "im-rep") applyIncoming("replace"); else if (id === "im-cancel") closeModal();
 });
 function readIncoming() {
@@ -889,11 +1002,11 @@ function renderChart() {
   });
   if (n > 1) {
     g += `<line x1="${L}" x2="${W - R}" y1="${Y(mx).toFixed(1)}" y2="${Y(mx).toFixed(1)}" stroke="#E0A100" stroke-width="1.5" stroke-dasharray="5 4"/>`;
-    g += `<polyline points="${pts.map((p, i) => X(i).toFixed(1) + "," + Y(p.q).toFixed(1)).join(" ")}" fill="none" stroke="#1D6FD8" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
+    g += `<polyline points="${pts.map((p, i) => X(i).toFixed(1) + "," + Y(p.q).toFixed(1)).join(" ")}" fill="none" stroke="#A02C5C" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
   }
   pts.forEach((p, i) => {
     const cx = X(i).toFixed(1), cy = Y(p.q).toFixed(1), sel = i === chSel;
-    g += `<circle cx="${cx}" cy="${cy}" r="${sel ? 7 : 4.5}" fill="${p.rc ? "#E0A100" : "#1D6FD8"}" stroke="${sel ? "#0F1B2D" : "#fff"}" stroke-width="${sel ? 2.5 : 2}"/><circle cx="${cx}" cy="${cy}" r="17" fill="transparent" data-i="${i}"/>`;
+    g += `<circle cx="${cx}" cy="${cy}" r="${sel ? 7 : 4.5}" fill="${p.rc ? "#E0A100" : "#A02C5C"}" stroke="${sel ? "#2B1020" : "#fff"}" stroke-width="${sel ? 2.5 : 2}"/><circle cx="${cx}" cy="${cy}" r="17" fill="transparent" data-i="${i}"/>`;
   });
   $("ch-box").innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="График: ${esc(x.n)}, точек ${n}, от ${fnum(mn)} до ${fnum(mx)} ${x.u}">${g}</svg>`;
 
