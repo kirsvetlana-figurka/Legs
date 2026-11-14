@@ -238,7 +238,7 @@ input[readonly]{background:#F2F5F8;font-size:13px}
     <div class="card"><h3>Лучшие результаты</h3><div class="recs" id="recs"></div></div>
 
     <div class="card"><h3>Цели</h3><div id="goals"></div>
-      <p class="note">Цель можно менять в любой момент. Пустое поле убирает цель. На графике цель показана зелёной пунктирной линией.</p></div>
+      <p class="note">Цель можно менять в любой момент, пустое поле убирает цель. На графике цель показана зелёной пунктирной линией. Кнопка ✕ убирает упражнение из рекордов, пока по нему нет результатов.</p></div>
 
     <div class="card"><h3>График</h3>
       <label for="ch-ex">Упражнение</label><select id="ch-ex"></select>
@@ -975,13 +975,14 @@ function libBody() {
     <div class="ed-row"><div><label for="lb-s">Подходов</label><input type="number" id="lb-s" inputmode="numeric" min="1" max="20" value="${v.s}"></div>
     <div><label for="lb-r">Повторов</label><input type="number" id="lb-r" inputmode="numeric" min="1" value="${v.r}"></div>
     <div><label for="lb-u">Единица</label><select id="lb-u">${unitOpts(v.u)}</select></div></div>
-    <label class="chk"><input type="checkbox" id="lb-rec"${v.rec ? " checked" : ""}>Вести рекорды по этому упражнению</label>
-    <div id="lb-ru-wrap"${v.rec ? "" : " hidden"}><label for="lb-ru" style="margin-top:0">Единица результата</label><input type="text" id="lb-ru" list="units" value="${esc(v.ru || "раз")}" maxlength="10"></div>
+    <label for="lb-g">Цель (необязательно)</label>
+    <div class="ed-row" style="grid-template-columns:2fr 1fr"><input type="number" id="lb-g" inputmode="decimal" min="0" step="any" value="${v.id && S.goals[v.id] ? S.goals[v.id] : ""}" placeholder="например: 100"><input type="text" id="lb-ru" list="units" value="${esc(v.ru || "раз")}" maxlength="10" aria-label="Единица цели"></div>
+    <p class="note">Упражнение с целью появляется на вкладке «Рекорды»: там вводятся результаты и строится график.</p>
     <div class="actions"><button class="btn primary wide" type="submit">${e ? "Сохранить" : "Добавить в справочник"}</button>${e ? '<button class="btn wide" type="button" id="lb-cancel">Отмена</button>' : ""}</div></form>`;
   if (!S.lib.length) return h + `<div class="restcard"><b>Справочник пуст</b>Добавьте первое упражнение выше.</div>`;
   h += `<ul class="plain">`;
   S.lib.slice().sort((a, b) => a.n.localeCompare(b.n, "ru")).forEach(x => {
-    h += `<li class="card libcard"><span class="nm">${esc(x.n)}<small>${x.s}×${x.r} ${x.u}${x.rec ? ", рекорды: " + esc(ruOf(x)) : ""}</small></span><button class="btn" data-ledit="${x.id}">Изменить</button><button class="btn danger" data-ldel="${x.id}" aria-label="Удалить из справочника">✕</button></li>`;
+    h += `<li class="card libcard"><span class="nm">${esc(x.n)}<small>${x.s}×${x.r} ${x.u}${S.goals[x.id] ? ", цель: " + fnum(S.goals[x.id]) + " " + esc(ruOf(x)) : ""}</small></span><button class="btn" data-ledit="${x.id}">Изменить</button><button class="btn danger" data-ldel="${x.id}" aria-label="Удалить из справочника">✕</button></li>`;
   });
   return h + `</ul>`;
 }
@@ -1053,24 +1054,25 @@ $("pl-body").addEventListener("click", e => {
 $("pl-body").addEventListener("submit", e => {
   e.preventDefault();
   const n = $("lb-n").value.trim(), s = Math.round(+$("lb-s").value), r = Math.round(+$("lb-r").value), u = $("lb-u").value;
-  const rec = $("lb-rec").checked, ru = $("lb-ru").value.trim().slice(0, 10) || "раз";
+  const gRaw = $("lb-g").value.trim().replace(",", "."), goal = gRaw === "" ? 0 : parseFloat(gRaw), ru = $("lb-ru").value.trim().slice(0, 10) || "раз";
+  if (gRaw !== "" && !(goal > 0)) { toast("Цель должна быть больше нуля"); return; }
   if (!n) { toast("Введите название"); $("lb-n").focus(); return; }
   if (!(s >= 1 && s <= 20)) { toast("Подходов должно быть от 1 до 20"); return; }
   if (!(r >= 1)) { toast("Введите число повторов"); return; }
   if (libEdit != null) {
     const x = S.lib.find(v => v.id === libEdit);
-    if (x && x.rec && !rec && S.rec.some(q => q.ex === x.id)) { toast("По упражнению есть записи рекордов. Оставьте галочку или сначала удалите записи"); return; }
-    if (x) { Object.assign(x, {n, s, r, u, rec, ru}); if (!rec) delete S.goals[x.id]; }
+    if (x) { Object.assign(x, {n, s, r, u, ru}); if (goal > 0) { x.rec = true; S.goals[x.id] = goal; } else delete S.goals[x.id]; }
     libEdit = null; toast("Сохранено");
   } else {
-    S.lib.push({id:S.lib.reduce((m, v) => Math.max(m, v.id), 0) + 1, n, s, r, u, rec, ru}); toast("Добавлено в справочник");
+    const x = {id:S.lib.reduce((m, v) => Math.max(m, v.id), 0) + 1, n, s, r, u, ru};
+    if (goal > 0) { x.rec = true; S.goals[x.id] = goal; }
+    S.lib.push(x); toast(goal > 0 ? "Добавлено в справочник, цель появится в рекордах" : "Добавлено в справочник");
   }
   save(); renderPlan();
 });
 $("pl-body").addEventListener("change", e => {
   const el = e.target;
   if (el.id === "pl-date") { if (el.value) { pDate = el.value; renderPlan(); } return; }
-  if (el.id === "lb-rec") { $("lb-ru-wrap").hidden = !el.checked; return; }
   if (!el.dataset.f) return;
   const x = pList(pDate).find(v => v.id === +el.dataset.id); if (!x) return;
   const f = el.dataset.f;
@@ -1224,39 +1226,46 @@ window.addEventListener("hashchange", readIncoming);
 /* ---------- Упражнения для рекордов ---------- */
 function renderRxPanel() {
   const free = S.lib.filter(x => !x.rec);
-  $("rx-panel").innerHTML = `<h3>Упражнение для рекордов</h3>
+  $("rx-panel").innerHTML = `<h3>Добавить упражнение и цель</h3>
     ${free.length ? `<label for="rx-lib" style="margin-top:0">Из справочника</label><select id="rx-lib"><option value="">Выберите упражнение…</option>${free.map(x => `<option value="${x.id}">${esc(x.n)}</option>`).join("")}</select>
-    <label for="rx-lu">Единица результата</label><input type="text" id="rx-lu" list="units" value="раз" maxlength="10">
-    <div class="actions"><button class="btn primary wide" type="button" id="rx-addlib">Вести рекорды по нему</button></div>
+    <div class="ed-row" style="grid-template-columns:2fr 1fr"><div><label for="rx-lg">Цель (необязательно)</label><input type="number" id="rx-lg" inputmode="decimal" min="0" step="any" placeholder="например: 100"></div><div><label for="rx-lu">Единица</label><input type="text" id="rx-lu" list="units" value="раз" maxlength="10"></div></div>
+    <div class="actions"><button class="btn primary wide" type="button" id="rx-addlib">Добавить в рекорды</button></div>
     <div class="rx-sep"></div>` : ""}
     <label for="rx-n"${free.length ? "" : ' style="margin-top:0"'}>Новое упражнение</label><input type="text" id="rx-n" maxlength="60" placeholder="например: Подтягивания">
-    <label for="rx-u">Единица результата</label><input type="text" id="rx-u" list="units" value="раз" maxlength="10">
+    <div class="ed-row" style="grid-template-columns:2fr 1fr"><div><label for="rx-g">Цель (необязательно)</label><input type="number" id="rx-g" inputmode="decimal" min="0" step="any" placeholder="например: 20"></div><div><label for="rx-u">Единица</label><input type="text" id="rx-u" list="units" value="раз" maxlength="10"></div></div>
     <p class="note">Новое упражнение появится и в справочнике, там можно задать подходы и повторы для плана.</p>
     <div class="actions"><button class="btn primary wide" type="button" id="rx-create">Создать и добавить</button><button class="btn wide" type="button" id="rx-close">Закрыть</button></div>`;
 }
-function trackEx(x, unit) {
+function readGoal(id) { const raw = $(id).value.trim().replace(",", "."); if (raw === "") return 0; const v = parseFloat(raw); return v > 0 ? v : NaN; }
+function trackEx(x, unit, goal) {
   x.rec = true; x.ru = (unit || "").trim().slice(0, 10) || "раз";
+  if (goal > 0) S.goals[x.id] = goal;
   save(); chEx = x.id; chSel = null; chInit = true;
   $("rx-panel").hidden = true; renderRec(); $("f-ex").value = String(x.id); qtyLabel();
   toast("Добавлено: " + x.n);
 }
 $("rx-open").addEventListener("click", () => { renderRxPanel(); $("rx-panel").hidden = false; $("rx-panel").scrollIntoView({block:"nearest"}); });
 $("rx-panel").addEventListener("change", e => {
-  if (e.target.id === "rx-lib") { const x = exOf(+e.target.value); if (x) $("rx-lu").value = x.u === "сек" ? "сек" : "раз"; }
+  if (e.target.id === "rx-lib") {
+    const x = exOf(+e.target.value);
+    if (x) { $("rx-lu").value = x.ru || (x.u === "сек" ? "сек" : "раз"); $("rx-lg").value = S.goals[x.id] || ""; }
+  }
 });
 $("rx-panel").addEventListener("click", e => {
   const id = e.target.id;
   if (id === "rx-close") { $("rx-panel").hidden = true; return; }
   if (id === "rx-addlib") {
     const x = exOf(+$("rx-lib").value); if (!x) { toast("Выберите упражнение из списка"); return; }
-    trackEx(x, $("rx-lu").value); return;
+    const g = readGoal("rx-lg"); if (g !== g) { toast("Цель должна быть больше нуля"); return; }
+    trackEx(x, $("rx-lu").value, g); return;
   }
   if (id === "rx-create") {
     const n = $("rx-n").value.trim(); if (!n) { toast("Введите название"); $("rx-n").focus(); return; }
+    const g = readGoal("rx-g"); if (g !== g) { toast("Цель должна быть больше нуля"); return; }
     let x = S.lib.find(v => v.n.toLowerCase() === n.toLowerCase());
     if (x && x.rec) { toast("Такое упражнение уже есть в рекордах"); return; }
     if (!x) { x = {id:S.lib.reduce((m, v) => Math.max(m, v.id), 0) + 1, n, s:3, r:10, u:"раз"}; S.lib.push(x); }
-    trackEx(x, $("rx-u").value);
+    trackEx(x, $("rx-u").value, g);
   }
 });
 
@@ -1266,7 +1275,7 @@ function renderGoals() {
   S.rec.forEach(r => { if (!(r.ex in best) || r.q > best[r.ex]) best[r.ex] = r.q; });
   $("goals").innerHTML = !trk().length ? `<p class="note" style="margin:0">Сначала добавьте упражнение для рекордов.</p>` : trk().map(x => {
     const i = x.id, u = ruOf(x), g = S.goals[i], b = best[i];
-    let h = `<div class="goal"><label for="g${i}">${esc(x.n)}</label><div class="goal-in"><input type="number" id="g${i}" inputmode="decimal" min="0" step="any" value="${g ? g : ""}" data-gi="${i}" placeholder="Цель не задана"><span class="u">${esc(u)}</span></div>`;
+    let h = `<div class="goal"><label for="g${i}">${esc(x.n)}</label><div class="goal-in"><input type="number" id="g${i}" inputmode="decimal" min="0" step="any" value="${g ? g : ""}" data-gi="${i}" placeholder="Цель не задана"><span class="u">${esc(u)}</span>${S.rec.some(q => q.ex === i) ? "" : `<button class="btn" type="button" data-untrack="${i}" aria-label="Убрать упражнение из рекордов" style="min-height:44px;padding:0 12px">✕</button>`}</div>`;
     if (g) {
       const pct = b === undefined ? 0 : Math.min(100, Math.round(b / g * 100));
       const info = b === undefined ? "Пока нет результатов" : b >= g ? "Цель достигнута: " + fnum(b) + " из " + fnum(g) + " " + u : "Лучший результат " + fnum(b) + ", осталось " + fnum(g - b) + " " + u + " (" + pct + "%)";
@@ -1275,6 +1284,11 @@ function renderGoals() {
     return h + `</div>`;
   }).join("");
 }
+$("goals").addEventListener("click", e => {
+  const b = e.target.closest("[data-untrack]"); if (!b) return;
+  const x = exOf(+b.dataset.untrack); if (!x) return;
+  x.rec = false; delete S.goals[x.id]; save(); renderRec(); toast("Убрано из рекордов, в справочнике осталось");
+});
 $("goals").addEventListener("change", e => {
   const el = e.target, i = el.dataset.gi; if (i === undefined) return;
   const raw = el.value.trim().replace(",", ".");
