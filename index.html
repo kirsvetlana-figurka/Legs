@@ -122,6 +122,25 @@ nav button[aria-current=page]{color:var(--blue)}
 .ed-top label,.ed-row label{margin-top:0}
 .ed-top .del{flex:0 0 50px;min-height:50px;border:1.5px solid var(--line);border-radius:12px;background:#fff;color:var(--red);font-size:20px}
 .seg.two{grid-template-columns:repeat(2,1fr)}
+.goal{margin-bottom:14px}
+.goal:last-child{margin-bottom:0}
+.goal label{margin:0 0 4px;color:var(--ink);font-weight:600}
+.goal-in{display:flex;align-items:center;gap:8px}
+.goal-in .u{color:var(--mute);min-width:32px}
+.gbar{height:8px;border-radius:4px;background:#EBDDE4;overflow:hidden;margin-top:8px}
+.gbar span{display:block;height:100%;background:var(--green)}
+.rx-sep{border-top:1px solid var(--line);margin:16px 0 4px}
+.progrow{display:flex;gap:8px;margin-bottom:12px}
+.progrow select{flex:1;min-width:0}
+.progrow .btn{flex:0 0 52px;padding:0;font-size:22px}
+.progrow .btn[hidden]{display:none}
+[hidden]{display:none !important}
+.dchips{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.daychip{min-width:0;padding:0;min-height:48px;border:1.5px solid var(--line);border-radius:12px;background:#fff;font-weight:600}
+.daychip[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--ink)}
+.sub{border:1.5px solid var(--line);border-radius:12px;padding:10px;margin-top:10px}
+.chk{display:flex;align-items:center;gap:10px;font-size:16px;color:var(--ink);margin:12px 0}
+.chk input{width:24px;height:24px}
 .seg.three{grid-template-columns:repeat(3,1fr)}
 #ch-range button{min-height:44px}
 #ch-range button b{font-size:15px}
@@ -191,7 +210,8 @@ input[readonly]{background:#F2F5F8;font-size:13px}
     <div class="strip" id="strip" aria-label="Недели"></div>
   </header>
   <main>
-    <div class="weekhead"><div><h2 id="wk-title"></h2><div class="dates num" id="wk-dates"></div></div><span class="pill" id="wk-mode"></span></div>
+    <div class="progrow"><select id="pr-sel" aria-label="Комплекс"></select><button class="btn" id="pr-edit" type="button" aria-label="Настроить комплекс">⚙</button><button class="btn primary" id="pr-new" type="button" aria-label="Новый комплекс">＋</button></div>
+    <div class="weekhead" id="wk-head"><div><h2 id="wk-title"></h2><div class="dates num" id="wk-dates"></div></div><span class="pill" id="wk-mode"></span></div>
     <div id="wk-body"></div>
   </main>
 </section>
@@ -207,12 +227,18 @@ input[readonly]{background:#F2F5F8;font-size:13px}
       <input type="date" id="f-date" required>
       <label for="f-ex">Упражнение</label>
       <select id="f-ex"></select>
+      <button class="btn" type="button" id="rx-open" style="margin-top:8px;width:100%">＋ Добавить упражнение</button>
       <label for="f-qty" id="f-qty-l">Количество</label>
       <input type="number" id="f-qty" inputmode="decimal" min="0" step="any" placeholder="0" required>
       <div class="actions"><button class="btn primary wide" type="submit">Записать</button></div>
     </form>
 
+    <div class="card" id="rx-panel" hidden></div>
+
     <div class="card"><h3>Лучшие результаты</h3><div class="recs" id="recs"></div></div>
+
+    <div class="card"><h3>Цели</h3><div id="goals"></div>
+      <p class="note">Цель можно менять в любой момент. Пустое поле убирает цель. На графике цель показана зелёной пунктирной линией.</p></div>
 
     <div class="card"><h3>График</h3>
       <label for="ch-ex">Упражнение</label><select id="ch-ex"></select>
@@ -261,6 +287,7 @@ input[readonly]{background:#F2F5F8;font-size:13px}
   <button data-tab="abs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="18" rx="3"/><path d="M12 3v18M6 9h12M6 15h12"/></svg>Пресс</button>
   <button data-tab="plan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6h1M4 12h1M4 18h1"/></svg>План</button>
 </nav>
+<datalist id="units"><option value="раз"><option value="сек"><option value="см"><option value="м"><option value="кг"><option value="мин"></datalist>
 <div id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-t"><div class="modal-card" id="modal-body"></div></div>
 <div id="toast" role="status" aria-live="polite"></div>
 
@@ -279,13 +306,7 @@ const WK = {
   11:[1,"6x50 2x50 2x35 2x35 2x35 2x90 5x30"], 12:[2,"4x75 4x35 2x40 2x40 2x40 2x100 6x30"],
   13:[0,""], 14:[1,"3x30 2x30 2x20 2x20 2x20 2x30 4x20"], 15:[2,"4x100 4x50 2x50 2x50 2x50 2x100 5x50"]
 };
-const RX = [
-  {n:"Двойные прыжки на скакалке — 2 ноги", u:"раз"},
-  {n:"Двойные прыжки на скакалке — левая нога", u:"раз"},
-  {n:"Двойные прыжки на скакалке — правая нога", u:"раз"},
-  {n:"Прыжки в длину — с двух ног", u:"см"},
-  {n:"Прыжки в длину — с одной ноги", u:"см"}
-];
+const RX0 = [["Двойные прыжки на скакалке — 2 ноги", "раз"], ["Двойные прыжки на скакалке — левая нога", "раз"], ["Двойные прыжки на скакалке — правая нога", "раз"], ["Прыжки в длину — с двух ног", "см"], ["Прыжки в длину — с одной ноги", "см"]];
 
 const K = "legs-tracker-v1";
 const $ = id => document.getElementById(id);
@@ -293,6 +314,8 @@ const pad = n => String(n).padStart(2, "0");
 const fmt = d => pad(d.getDate()) + "." + pad(d.getMonth() + 1);
 const iso = d => d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
 const isoRu = s => s.slice(8, 10) + "." + s.slice(5, 7) + "." + s.slice(0, 4);
+const parseIso = t => { const [y, m, d] = t.split("-").map(Number); return new Date(y, m - 1, d); };
+const shiftIso = (t, n) => { const d = parseIso(t); d.setDate(d.getDate() + n); return iso(d); };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
 const ABS_DEF = [
@@ -309,6 +332,24 @@ function fixAbs(o) {
   if (!o.pdone || typeof o.pdone !== "object" || Array.isArray(o.pdone)) o.pdone = {};
   if (typeof o.pid !== "number") o.pid = 0;
   if (!Array.isArray(o.imp)) o.imp = [];
+  if (!Array.isArray(o.progs)) o.progs = [];
+  o.progs = o.progs.filter(p => p && typeof p.id === "string" && typeof p.name === "string" && /^\d{4}-\d{2}-\d{2}$/.test(p.start) && p.weeks >= 1 && Array.isArray(p.days) && p.days.length && Array.isArray(p.ex) && p.ex.length && Array.isArray(p.vol) && Array.isArray(p.rest));
+  if (typeof o.cur !== "string") o.cur = "legs";
+  if (!o.goals || typeof o.goals !== "object" || Array.isArray(o.goals)) o.goals = {};
+  migrateRec(o);
+}
+// Рекорды раньше ссылались на пять упражнений по номеру; теперь по номеру упражнения из справочника.
+function migrateRec(o) {
+  if (o.rv === 2) return;
+  const map = {};
+  RX0.forEach(([n, u], i) => {
+    let x = o.lib.find(v => v.n === n);
+    if (!x) { x = {id:o.lib.reduce((m, v) => Math.max(m, v.id), 0) + 1, n, s:3, r:10, u:"раз"}; o.lib.push(x); }
+    x.rec = true; x.ru = x.ru || u; map[i] = x.id;
+  });
+  if (Array.isArray(o.rec)) o.rec.forEach(r => { if (r.ex in map) r.ex = map[r.ex]; });
+  const g = {}; Object.keys(o.goals).forEach(k => { g[k in map ? map[k] : k] = o.goals[k]; }); o.goals = g;
+  o.rv = 2;
 }
 let S = load();
 function migrate() {
@@ -318,7 +359,7 @@ function migrate() {
     if (q.length !== 3) return;
     const w = +q[0], d = +q[1], e = +q[2];
     delete S.done[k]; ch = true;
-    if (WK[w] && WK[w][0] && e < 7) for (let t = 0; t < setsOf(w, e); t++) S.done[key(w, d, e, t)] = 1;
+    if (WK[w] && WK[w][0] && e < 7) for (let t = 0; t < setsOf(LEGS, w, e); t++) S.done[pk(LEGS, w, d, e, t)] = 1;
   });
   if (ch) save();
 }
@@ -328,119 +369,291 @@ function load() {
 }
 function save() { try { localStorage.setItem(K, JSON.stringify(S)); } catch (e) { toast("Не удалось сохранить данные"); } }
 
-function dateOf(w, di) { const d = new Date(START); d.setDate(d.getDate() + (w - 1) * 7 + OFF[di]); return d; }
-const key = (w, d, e, t) => w + "-" + d + "-" + e + "-" + t;
-const setsOf = (w, e) => WK[w][0] ? +WK[w][1].split(" ")[e].split("x")[0] : 0;
-function dayTotal(w) { let n = 0; for (let e = 0; e < 7; e++) n += setsOf(w, e); return n; }
-function dayCount(w, d) { let c = 0; for (let e = 0; e < 7; e++) for (let t = 0; t < setsOf(w, e); t++) if (S.done[key(w, d, e, t)]) c++; return c; }
-function exCount(w, d, e) { let c = 0; for (let t = 0; t < setsOf(w, e); t++) if (S.done[key(w, d, e, t)]) c++; return c; }
-function weekShare(w) { let c = 0; for (let d = 0; d < 4; d++) c += dayCount(w, d); return WK[w][0] ? c / (4 * dayTotal(w)) : 0; }
-let TOTAL = 0; for (let w = 1; w <= 15; w++) if (WK[w][0]) TOTAL += 4 * dayTotal(w);
+const LEGS = {id:"legs", name:"Ноги, 15 недель", start:"2026-11-10", weeks:15, days:[2, 3, 5, 6], rest:[13], builtin:true, ex:EX.map(n => ({n, u:"раз"}))};
+const progs = () => [LEGS].concat(S.progs);
+const curP = () => progs().find(x => x.id === S.cur) || LEGS;
+const WDC = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
+const pRest = (p, w) => p.rest.indexOf(w) >= 0;
+function pVol(p, w, e) {
+  if (p.builtin) { if (pRest(p, w)) return [0, 0]; const q = WK[w][1].split(" ")[e].split("x"); return [+q[0], +q[1]]; }
+  const v = p.vol[w - 1] && p.vol[w - 1][e]; return v ? [+v[0], +v[1]] : [0, 0];
+}
+const setsOf = (p, w, e) => pRest(p, w) ? 0 : pVol(p, w, e)[0];
+const pStart = p => parseIso(p.start);
+const pOff = p => { const sd = pStart(p).getDay(); return p.days.map(wd => (wd - sd + 7) % 7).sort((a, b) => a - b); };
+function progDate(p, w, di) { const d = pStart(p); d.setDate(d.getDate() + (w - 1) * 7 + pOff(p)[di]); return d; }
+const pk = (p, w, d, e, t) => (p.builtin ? "" : p.id + ":") + w + "-" + d + "-" + e + "-" + t;
+function dayTotal(p, w) { let n = 0; for (let e = 0; e < p.ex.length; e++) n += setsOf(p, w, e); return n; }
+function exCount(p, w, d, e) { let c = 0; for (let t = 0; t < setsOf(p, w, e); t++) if (S.done[pk(p, w, d, e, t)]) c++; return c; }
+function dayCount(p, w, d) { let c = 0; for (let e = 0; e < p.ex.length; e++) c += exCount(p, w, d, e); return c; }
+function weekShare(p, w) { const dt = dayTotal(p, w); if (!dt) return 0; let c = 0; for (let d = 0; d < p.days.length; d++) c += dayCount(p, w, d); return c / (p.days.length * dt); }
+function progTotal(p) { let t = 0; for (let w = 1; w <= p.weeks; w++) t += p.days.length * dayTotal(p, w); return t; }
+function progDone(p) { let t = 0; for (let w = 1; w <= p.weeks; w++) for (let d = 0; d < p.days.length; d++) t += dayCount(p, w, d); return t; }
+function wkLabel(p, w) { if (p.builtin) { const m = WK[w][0]; return m === 0 ? "Отдых" : m === 1 ? "1 нога" : "2 ноги"; } return pRest(p, w) ? "Отдых" : w + " из " + p.weeks; }
 migrate();
 
-function initialSel() {
+function initialSel(p) {
   const t = new Date(); t.setHours(0, 0, 0, 0);
-  const diff = Math.round((t - START) / 864e5);
+  const diff = Math.round((t - pStart(p)) / 864e5), off = pOff(p), n = off.length;
   if (diff < 0) return {w:1, d:0};
-  if (diff >= 105) return {w:15, d:3};
-  let w = Math.floor(diff / 7) + 1, d = OFF.findIndex(o => o >= diff % 7);
-  if (d < 0) { if (w < 15) { w++; d = 0; } else d = 3; }
+  if (diff >= p.weeks * 7) return {w:p.weeks, d:n - 1};
+  let w = Math.floor(diff / 7) + 1, d = off.findIndex(o => o >= diff % 7);
+  if (d < 0) { if (w < p.weeks) { w++; d = 0; } else d = n - 1; }
   return {w, d};
 }
-let sel = initialSel();
+let sel = initialSel(curP());
+let trMode = "view", draft = null, edW = 1;
 
 /* ---------- Тренировки ---------- */
 function renderTrain() {
-  const doneAll = Object.keys(S.done).filter(k => S.done[k]).length;
-  $("total").innerHTML = "подходов <b class='num'>" + doneAll + "</b> из " + TOTAL;
+  const p = curP();
+  if (sel.w > p.weeks) sel = initialSel(p);
+  $("pr-sel").innerHTML = progs().map(x => `<option value="${esc(x.id)}"${x.id === p.id ? " selected" : ""}>${esc(x.name)}</option>`).join("");
+  $("pr-edit").hidden = !!p.builtin;
+  $("total").innerHTML = "подходов <b class='num'>" + progDone(p) + "</b> из " + progTotal(p);
+  const view = trMode === "view";
+  $("strip").hidden = !view; $("wk-head").hidden = !view;
+  if (trMode === "new") { $("wk-body").innerHTML = newForm(); return; }
+  if (trMode === "edit" && !p.builtin) { $("wk-body").innerHTML = editForm(p); return; }
+  trMode = "view"; $("strip").hidden = false; $("wk-head").hidden = false;
 
   let strip = "";
-  for (let w = 1; w <= 15; w++) {
-    const rest = WK[w][0] === 0;
-    strip += `<button class="chip${rest ? " rest" : ""}${w === sel.w ? " sel" : ""}" data-w="${w}" style="--p:${Math.round(weekShare(w) * 100)}%" aria-label="Неделя ${w}${rest ? ", отдых" : ""}"><span class="num">${w}</span></button>`;
+  for (let w = 1; w <= p.weeks; w++) {
+    const rest = pRest(p, w);
+    strip += `<button class="chip${rest ? " rest" : ""}${w === sel.w ? " sel" : ""}" data-w="${w}" style="--p:${Math.round(weekShare(p, w) * 100)}%" aria-label="Неделя ${w}${rest ? ", отдых" : ""}"><span class="num">${w}</span></button>`;
   }
   $("strip").innerHTML = strip;
   const cur = $("strip").querySelector(".sel");
   if (cur) cur.scrollIntoView({inline:"center", block:"nearest"});
 
-  const [m, vs] = WK[sel.w];
+  const n = p.days.length;
   $("wk-title").textContent = "Неделя " + sel.w;
-  $("wk-dates").textContent = fmt(dateOf(sel.w, 0)) + " – " + fmt(dateOf(sel.w, 3));
-  $("wk-mode").textContent = m === 0 ? "Отдых" : (m === 1 ? "1 нога" : "2 ноги");
+  $("wk-dates").textContent = fmt(progDate(p, sel.w, 0)) + " – " + fmt(progDate(p, sel.w, n - 1));
+  $("wk-mode").textContent = wkLabel(p, sel.w);
 
-  if (m === 0) {
+  if (pRest(p, sel.w)) {
     $("wk-body").innerHTML = `<div class="restcard"><b>Неделя отдыха</b>Программа не выполняется.</div>`;
     return;
   }
-  const v = vs.split(" ");
-  let h = `<div class="seg" role="tablist">`;
-  for (let d = 0; d < 4; d++) {
-    const full = dayCount(sel.w, d) === dayTotal(sel.w);
-    h += `<button role="tab" data-d="${d}" class="${d === sel.d ? "sel" : ""}${full ? " full" : ""}" aria-selected="${d === sel.d}"><b>${DN[d]}</b><span class="num">${fmt(dateOf(sel.w, d))}</span></button>`;
+  if (sel.d >= n) sel.d = n - 1;
+  let h = `<div class="seg" role="tablist" style="grid-template-columns:repeat(${n},1fr)">`;
+  for (let d = 0; d < n; d++) {
+    const full = dayCount(p, sel.w, d) === dayTotal(p, sel.w), dt = progDate(p, sel.w, d);
+    h += `<button role="tab" data-d="${d}" class="${d === sel.d ? "sel" : ""}${full ? " full" : ""}" aria-selected="${d === sel.d}"><b>${WDC[dt.getDay()]}</b><span class="num">${fmt(dt)}</span></button>`;
   }
   h += `</div>`;
-  const cnt = dayCount(sel.w, sel.d), tot = dayTotal(sel.w);
-  if (cnt === tot) h += `<p class="banner">День выполнен</p>`;
+  const cnt = dayCount(p, sel.w, sel.d), tot = dayTotal(p, sel.w);
+  if (tot && cnt === tot) h += `<p class="banner">День выполнен</p>`;
   h += `<ul class="list">`;
-  EX.forEach((n, i) => {
-    const ns = setsOf(sel.w, i), c = exCount(sel.w, sel.d, i), on = c === ns;
-    const legs = (i === 3 || i === 4) ? "на двух ногах" : (m === 1 ? "на каждую ногу" : "на двух ногах");
+  p.ex.forEach((x, i) => {
+    const [ns, rp] = pVol(p, sel.w, i), c = exCount(p, sel.w, sel.d, i), on = ns > 0 && c === ns;
+    const legs = p.builtin ? ((i === 3 || i === 4) ? "на двух ногах, " : (WK[sel.w][0] === 1 ? "на каждую ногу, " : "на двух ногах, ")) : "";
     let sets = "";
     for (let t = 0; t < ns; t++) {
-      const d = !!S.done[key(sel.w, sel.d, i, t)];
-      sets += `<button class="set${d ? " on" : ""}" data-e="${i}" data-t="${t}" aria-pressed="${d}" aria-label="${n}, подход ${t + 1} из ${ns}">${t + 1}</button>`;
+      const d = !!S.done[pk(p, sel.w, sel.d, i, t)];
+      sets += `<button class="set${d ? " on" : ""}" data-e="${i}" data-t="${t}" aria-pressed="${d}" aria-label="${esc(x.n)}, подход ${t + 1} из ${ns}">${t + 1}</button>`;
     }
-    h += `<li><div class="ex${on ? " on" : ""}"><div class="ex-h"><span class="nm">${n}<small>${legs}, сделано ${c} из ${ns}</small></span><span class="vol">${v[i].replace("x", "×")}</span></div><div class="sets">${sets}</div></div></li>`;
+    h += `<li><div class="ex${on ? " on" : ""}"><div class="ex-h"><span class="nm">${esc(x.n)}<small>${legs}сделано ${c} из ${ns}</small></span><span class="vol">${ns}×${rp}${unitSm(x)}</span></div><div class="sets">${sets}${x.u === "сек" ? tmBtn(i) : ""}</div></div></li>`;
   });
   h += `</ul><div class="actions"><button class="btn wide" id="all">${cnt === tot ? "Снять все отметки" : "Отметить всё"}</button></div>`;
   $("wk-body").innerHTML = h;
 }
 
+/* --- создание комплекса --- */
+const WDORDER = [1, 2, 3, 4, 5, 6, 0];
+function newDraft() { return {name:"", start:iso(new Date()), weeks:"8", days:[1, 3, 5], restTxt:"", ex:[{n:"", s:"3", r:"10", u:"раз", dr:"0", dsn:"0"}]}; }
+function exDraftCard(x, i) {
+  return `<div class="sub"><div class="ed-top"><div><label for="x${i}n">Название упражнения</label><input type="text" id="x${i}n" value="${esc(x.n)}" maxlength="60" data-i="${i}" data-f="n"></div><button class="del" type="button" data-xdel="${i}" aria-label="Удалить упражнение">✕</button></div>
+    <div class="ed-row"><div><label>Подходов</label><input type="number" inputmode="numeric" min="1" max="20" value="${esc(x.s)}" data-i="${i}" data-f="s"></div>
+    <div><label>Повторов</label><input type="number" inputmode="numeric" min="1" value="${esc(x.r)}" data-i="${i}" data-f="r"></div>
+    <div><label>Единица</label><select data-i="${i}" data-f="u">${unitOpts(x.u)}</select></div></div>
+    <div class="ed-row" style="grid-template-columns:1fr 1fr"><div><label>Прирост повторов за неделю</label><input type="number" inputmode="numeric" value="${esc(x.dr)}" data-i="${i}" data-f="dr"></div>
+    <div><label>+1 подход каждые N недель</label><input type="number" inputmode="numeric" min="0" value="${esc(x.dsn)}" data-i="${i}" data-f="dsn"></div></div></div>`;
+}
+function newForm() {
+  const d = draft;
+  return `<form class="card" id="pr-form" novalidate><h3>Новый комплекс</h3>
+    <label for="d-name">Название</label><input type="text" id="d-name" value="${esc(d.name)}" maxlength="50" placeholder="например: Пресс на 8 недель">
+    <div class="ed-row" style="grid-template-columns:1fr 1fr"><div><label for="d-start">Дата начала</label><input type="date" id="d-start" value="${esc(d.start)}"></div>
+    <div><label for="d-weeks">Недель (1–52)</label><input type="number" id="d-weeks" inputmode="numeric" min="1" max="52" value="${esc(d.weeks)}"></div></div>
+    <label>Дни тренировок</label><div class="dchips" role="group" aria-label="Дни тренировок">${WDORDER.map(w => `<button type="button" class="daychip" data-wd="${w}" aria-pressed="${d.days.indexOf(w) >= 0}">${WDC[w]}</button>`).join("")}</div>
+    <label for="d-rest">Недели отдыха (номера через запятую, можно пусто)</label><input type="text" id="d-rest" inputmode="numeric" value="${esc(d.restTxt)}" placeholder="например: 4, 8">
+    <h3 style="margin-top:18px">Упражнения</h3>
+    ${d.ex.map(exDraftCard).join("")}
+    ${S.lib.length ? `<label for="d-lib">Добавить из справочника</label><select id="d-lib"><option value="">Выберите упражнение…</option>${S.lib.map(x => `<option value="${x.id}">${esc(x.n)} (${x.s}×${x.r} ${x.u})</option>`).join("")}</select>` : ""}
+    <div class="actions"><button class="btn wide" type="button" id="pr-addex">Добавить упражнение</button></div>
+    <p class="note">«Прирост повторов» и «+1 подход каждые N недель» задают рост нагрузки (0 — без роста). Потом любую неделю можно поправить вручную.</p>
+    <div class="actions"><button class="btn primary wide" type="submit">Создать комплекс</button><button class="btn wide" type="button" id="pr-cancel">Отмена</button></div></form>`;
+}
+function createProg() {
+  const d = draft, name = d.name.trim(), weeks = Math.round(+d.weeks);
+  if (!name) return toast("Введите название комплекса");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d.start)) return toast("Укажите дату начала");
+  if (!(weeks >= 1 && weeks <= 52)) return toast("Недель должно быть от 1 до 52");
+  if (!d.days.length) return toast("Выберите хотя бы один день недели");
+  if (!d.ex.length) return toast("Добавьте хотя бы одно упражнение");
+  const ex = [];
+  for (let i = 0; i < d.ex.length; i++) {
+    const x = d.ex[i], n = x.n.trim(), s = Math.round(+x.s), r = Math.round(+x.r), dr = Math.round(+x.dr || 0), dsn = Math.round(+x.dsn || 0);
+    if (!n) return toast("Заполните название упражнения " + (i + 1));
+    if (!(s >= 1 && s <= 20)) return toast("«" + n + "»: подходов от 1 до 20");
+    if (!(r >= 1)) return toast("«" + n + "»: введите число повторов");
+    ex.push({n, u:x.u === "сек" ? "сек" : "раз", s, r, dr, dsn: dsn > 0 ? dsn : 0});
+  }
+  const rest = Array.from(new Set(d.restTxt.split(/[^0-9]+/).filter(Boolean).map(Number).filter(v => v >= 1 && v <= weeks))).sort((a, b) => a - b);
+  const vol = [];
+  for (let w = 1; w <= weeks; w++) vol.push(ex.map(x => [Math.min(20, Math.max(1, x.s + (x.dsn ? Math.floor((w - 1) / x.dsn) : 0))), Math.max(1, x.r + x.dr * (w - 1))]));
+  const prog = {id:"p" + Date.now().toString(36), name, start:d.start, weeks, days:d.days.slice(), rest, ex:ex.map(x => ({n:x.n, u:x.u})), vol};
+  S.progs.push(prog); S.cur = prog.id; save();
+  trMode = "view"; draft = null; sel = initialSel(prog); renderTrain(); window.scrollTo(0, 0);
+  toast("Комплекс создан");
+}
+
+/* --- настройка комплекса --- */
+function editForm(p) {
+  if (edW > p.weeks) edW = 1;
+  const rest = pRest(p, edW);
+  let h = `<div class="card"><h3>Настройка комплекса</h3>
+    <label for="e-name">Название</label><input type="text" id="e-name" value="${esc(p.name)}" maxlength="50">
+    <label for="e-start">Дата начала</label><input type="date" id="e-start" value="${esc(p.start)}">
+    <label for="e-week">Неделя</label><select id="e-week">${Array.from({length:p.weeks}, (_, i) => `<option value="${i + 1}"${i + 1 === edW ? " selected" : ""}>Неделя ${i + 1}${pRest(p, i + 1) ? " (отдых)" : ""}</option>`).join("")}</select>
+    <label class="chk"><input type="checkbox" id="e-rest"${rest ? " checked" : ""}>Неделя отдыха</label>`;
+  if (!rest) {
+    p.ex.forEach((x, i) => {
+      const v = p.vol[edW - 1][i];
+      h += `<div class="sub"><b>${esc(x.n)}</b><div class="ed-row" style="grid-template-columns:1fr 1fr;margin-top:6px"><div><label>Подходов</label><input type="number" inputmode="numeric" min="1" max="20" value="${v[0]}" data-i="${i}" data-f="s"></div><div><label>Повторов (${x.u})</label><input type="number" inputmode="numeric" min="1" value="${v[1]}" data-i="${i}" data-f="r"></div></div></div>`;
+    });
+    if (edW < p.weeks) h += `<div class="actions"><button class="btn wide" type="button" id="e-copy">Скопировать на следующие недели</button></div>`;
+  }
+  return h + `<div class="actions"><button class="btn wide" type="button" id="e-send">Отправить комплекс</button></div><div class="actions"><button class="btn primary wide" type="button" id="e-done">Готово</button><button class="btn danger wide" type="button" id="e-del">Удалить комплекс</button></div></div>`;
+}
+
+/* --- обработчики --- */
+$("pr-sel").addEventListener("change", () => { S.cur = $("pr-sel").value; save(); trMode = "view"; sel = initialSel(curP()); renderTrain(); });
+$("pr-new").addEventListener("click", () => { trMode = "new"; draft = newDraft(); renderTrain(); window.scrollTo(0, 0); });
+$("pr-edit").addEventListener("click", () => { trMode = "edit"; edW = 1; renderTrain(); window.scrollTo(0, 0); });
 $("strip").addEventListener("click", e => {
   const b = e.target.closest(".chip"); if (!b) return;
   sel.w = +b.dataset.w; renderTrain();
 });
 $("wk-body").addEventListener("click", e => {
+  const p = curP(), t = e.target.closest("button, [data-d]");
+  if (trMode === "new") {
+    if (!t) return;
+    if (t.dataset.wd !== undefined) { const wd = +t.dataset.wd, i = draft.days.indexOf(wd); if (i >= 0) draft.days.splice(i, 1); else draft.days.push(wd); t.setAttribute("aria-pressed", i < 0); return; }
+    if (t.id === "pr-addex") { draft.ex.push({n:"", s:"3", r:"10", u:"раз", dr:"0", dsn:"0"}); renderTrain(); return; }
+    if (t.dataset.xdel !== undefined) { draft.ex.splice(+t.dataset.xdel, 1); renderTrain(); return; }
+    if (t.id === "pr-cancel") { trMode = "view"; draft = null; renderTrain(); }
+    return;
+  }
+  if (trMode === "edit") {
+    if (!t) return;
+    if (t.id === "e-done") { trMode = "view"; save(); renderTrain(); return; }
+    if (t.id === "e-send") {
+      const link = progLink(p);
+      if (navigator.share) navigator.share({title:p.name, text:"Комплекс упражнений «" + p.name + "». Откройте ссылку в приложении и нажмите «Добавить комплекс».", url:link}).catch(() => {}); else copyText(link);
+      return;
+    }
+    if (t.id === "e-copy") {
+      for (let w = edW + 1; w <= p.weeks; w++) if (!pRest(p, w)) p.vol[w - 1] = p.vol[edW - 1].map(v => v.slice());
+      save(); toast("Скопировано на следующие недели"); return;
+    }
+    if (t.id === "e-del") {
+      if (!confirm("Удалить комплекс «" + p.name + "» вместе с отметками?")) return;
+      S.progs = S.progs.filter(x => x.id !== p.id);
+      Object.keys(S.done).forEach(k => { if (k.indexOf(p.id + ":") === 0) delete S.done[k]; });
+      S.cur = "legs"; save(); trMode = "view"; sel = initialSel(LEGS); renderTrain(); toast("Комплекс удалён");
+    }
+    return;
+  }
   const s = e.target.closest("[data-d]");
   if (s) { sel.d = +s.dataset.d; renderTrain(); return; }
+  const tmb = e.target.closest("[data-tm]");
+  if (tmb) {
+    const i = +tmb.dataset.tm, x = p.ex[i]; if (!x) return;
+    const ns = setsOf(p, sel.w, i), w = sel.w, d = sel.d;
+    openTimer({name:x.n, secs:pVol(p, w, i)[1], keys:Array.from({length:ns}, (_, k) => pk(p, w, d, i, k)), store:S.done, after:renderTrain}); return;
+  }
   const r = e.target.closest(".set");
   if (r) {
-    const k = key(sel.w, sel.d, +r.dataset.e, +r.dataset.t);
+    const k = pk(p, sel.w, sel.d, +r.dataset.e, +r.dataset.t);
     if (S.done[k]) delete S.done[k]; else S.done[k] = 1;
     save(); renderTrain(); return;
   }
   if (e.target.id === "all") {
-    const all = dayCount(sel.w, sel.d) === dayTotal(sel.w);
-    for (let i = 0; i < 7; i++) for (let t = 0; t < setsOf(sel.w, i); t++) { const k = key(sel.w, sel.d, i, t); if (all) delete S.done[k]; else S.done[k] = 1; }
+    const all = dayCount(p, sel.w, sel.d) === dayTotal(p, sel.w);
+    for (let i = 0; i < p.ex.length; i++) for (let t2 = 0; t2 < setsOf(p, sel.w, i); t2++) { const k = pk(p, sel.w, sel.d, i, t2); if (all) delete S.done[k]; else S.done[k] = 1; }
     save(); renderTrain();
   }
 });
+$("wk-body").addEventListener("input", e => {
+  const el = e.target;
+  if (trMode === "new" && draft) {
+    if (el.id === "d-name") draft.name = el.value; else if (el.id === "d-start") draft.start = el.value;
+    else if (el.id === "d-weeks") draft.weeks = el.value; else if (el.id === "d-rest") draft.restTxt = el.value;
+    else if (el.dataset.i !== undefined && draft.ex[+el.dataset.i]) draft.ex[+el.dataset.i][el.dataset.f] = el.value;
+  }
+});
+$("wk-body").addEventListener("change", e => {
+  const el = e.target, p = curP();
+  if (trMode === "new" && draft) {
+    if (el.id === "d-lib" && el.value) {
+      const x = S.lib.find(v => v.id === +el.value);
+      if (x) { if (draft.ex.length === 1 && !draft.ex[0].n.trim()) draft.ex = []; draft.ex.push({n:x.n, s:String(x.s), r:String(x.r), u:x.u, dr:"0", dsn:"0"}); renderTrain(); }
+    } else if (el.dataset.i !== undefined && draft.ex[+el.dataset.i]) draft.ex[+el.dataset.i][el.dataset.f] = el.value;
+    return;
+  }
+  if (trMode === "edit" && !p.builtin) {
+    if (el.id === "e-name") { const v = el.value.trim(); if (v) p.name = v; else el.value = p.name; save(); }
+    else if (el.id === "e-start") { if (/^\d{4}-\d{2}-\d{2}$/.test(el.value)) { p.start = el.value; save(); } else el.value = p.start; }
+    else if (el.id === "e-week") { edW = +el.value; renderTrain(); }
+    else if (el.id === "e-rest") { const i = p.rest.indexOf(edW); if (el.checked && i < 0) p.rest.push(edW); if (!el.checked && i >= 0) p.rest.splice(i, 1); save(); renderTrain(); }
+    else if (el.dataset.i !== undefined) {
+      const v = Math.round(+el.value), f = el.dataset.f, k = f === "s" ? 0 : 1, row = p.vol[edW - 1][+el.dataset.i];
+      if (v >= 1 && (f !== "s" || v <= 20)) { row[k] = v; save(); } else el.value = row[k];
+    }
+  }
+});
+$("wk-body").addEventListener("submit", e => { e.preventDefault(); if (trMode === "new" && draft) createProg(); });
 
 /* ---------- Рекорды ---------- */
 let histLimit = 15;
 const cmp = (a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : a.id - b.id;
 
+const trk = () => S.lib.filter(x => x.rec);
+const exOf = id => S.lib.find(x => x.id === id);
+const ruOf = x => (x && x.ru) || "раз";
+function fillRecSelects() {
+  const t = trk(), opts = t.map(x => `<option value="${x.id}">${esc(x.n)}</option>`).join("");
+  const keep = +$("f-ex").value;
+  $("f-ex").innerHTML = opts || `<option value="">Нет упражнений</option>`;
+  if (t.some(x => x.id === keep)) $("f-ex").value = String(keep);
+  $("ch-ex").innerHTML = opts || `<option value="">Нет упражнений</option>`;
+  qtyLabel();
+}
 function renderRec() {
-  const asc = S.rec.slice().sort(cmp);
+  fillRecSelects();
+  const asc = S.rec.filter(r => exOf(r.ex)).sort(cmp);
   const best = {}, flag = {};
   asc.forEach(r => { if (!(r.ex in best) || r.q > best[r.ex]) { flag[r.id] = true; best[r.ex] = r.q; } });
   $("rec-total").textContent = S.rec.length ? "записей: " + S.rec.length : "";
 
-  $("recs").innerHTML = RX.map((x, i) => {
-    const rows = asc.filter(r => r.ex === i);
+  $("recs").innerHTML = !trk().length ? `<div class="empty" style="color:var(--mute)">Нет упражнений для рекордов. Добавьте упражнение кнопкой выше или отметьте «Вести рекорды» в справочнике.</div>` : trk().map(x => {
+    const rows = asc.filter(r => r.ex === x.id);
     if (!rows.length) return `<div class="rec"><div class="n">${esc(x.n)}</div><div></div><div class="empty">Пока нет записей</div></div>`;
     const b = Math.max(...rows.map(r => r.q));
     const bd = rows.find(r => r.q === b).date, last = rows[rows.length - 1];
-    return `<div class="rec"><div class="n">${esc(x.n)}</div><div class="best num">${b} <small>${x.u}</small></div>
+    return `<div class="rec"><div class="n">${esc(x.n)}</div><div class="best num">${b} <small>${esc(ruOf(x))}</small></div>
       <div class="meta num">рекорд ${isoRu(bd)}, последний результат ${last.q} (${isoRu(last.date)})</div><div></div>
       <div class="sp">${spark(rows.slice(-12).map(r => r.q))}</div></div>`;
   }).join("");
 
   const desc = asc.slice().reverse();
   $("hist").innerHTML = desc.length ? desc.slice(0, histLimit).map(r =>
-    `<li><span class="d num">${isoRu(r.date)}</span><span class="t">${esc(RX[r.ex].n)}${flag[r.id] ? '<span class="badge">рекорд</span>' : ""}</span><span class="q num">${r.q}</span><button class="x" data-id="${r.id}" aria-label="Удалить запись">✕</button></li>`
+    `<li><span class="d num">${isoRu(r.date)}</span><span class="t">${esc(exOf(r.ex).n)}${flag[r.id] ? '<span class="badge">рекорд</span>' : ""}</span><span class="q num">${r.q}</span><button class="x" data-id="${r.id}" aria-label="Удалить запись">✕</button></li>`
   ).join("") : `<li><span class="t" style="color:var(--mute)">Записей пока нет. Добавьте первую выше.</span></li>`;
   $("more").hidden = desc.length <= histLimit;
+  renderGoals();
   renderChart();
 }
 function spark(v) {
@@ -451,14 +664,14 @@ function spark(v) {
   return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="30" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts.join(" ")}" fill="none" stroke="#A02C5C" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>`;
 }
 
-$("f-ex").innerHTML = RX.map((x, i) => `<option value="${i}">${esc(x.n)}</option>`).join("");
 $("f-date").value = iso(new Date());
-function qtyLabel() { $("f-qty-l").textContent = "Результат, " + RX[+$("f-ex").value].u; }
-$("f-ex").addEventListener("change", qtyLabel); qtyLabel();
+function qtyLabel() { const x = exOf(+$("f-ex").value); $("f-qty-l").textContent = x ? "Результат, " + ruOf(x) : "Результат"; }
+$("f-ex").addEventListener("change", qtyLabel);
 
 $("form").addEventListener("submit", e => {
   e.preventDefault();
   const date = $("f-date").value, ex = +$("f-ex").value, q = parseFloat($("f-qty").value.replace(",", "."));
+  if (!exOf(ex)) { toast("Сначала добавьте упражнение для рекордов"); return; }
   if (!date) { toast("Выберите дату"); return; }
   if (!(q > 0)) { toast("Введите результат больше нуля"); $("f-qty").focus(); return; }
   const prev = S.rec.filter(r => r.ex === ex).map(r => r.q);
@@ -466,7 +679,7 @@ $("form").addEventListener("submit", e => {
   const id = S.rec.reduce((m, r) => Math.max(m, r.id), 0) + 1;
   S.rec.push({id, date, ex, q}); save(); chEx = ex; chSel = null; chInit = true;
   $("f-qty").value = ""; renderRec();
-  toast(isRec ? "Новый рекорд: " + q + " " + RX[ex].u : "Записано: " + q + " " + RX[ex].u);
+  toast(isRec ? "Новый рекорд: " + q + " " + ruOf(exOf(ex)) : "Записано: " + q + " " + ruOf(exOf(ex)));
 });
 $("hist").addEventListener("click", e => {
   const b = e.target.closest(".x"); if (!b) return;
@@ -491,7 +704,7 @@ $("file").addEventListener("change", () => {
       const o = JSON.parse(rd.result);
       if (!o || typeof o.done !== "object" || !Array.isArray(o.rec)) throw 0;
       if (!confirm("Заменить текущие данные данными из копии?")) return;
-      S = {done:o.done, rec:o.rec, abs:o.abs, lib:o.lib, plan:o.plan, pdone:o.pdone, pid:o.pid, imp:o.imp}; fixAbs(S); migrate(); save(); renderTrain(); renderRec(); renderAbs(); renderPlan(); toast("Данные загружены");
+      S = {done:o.done, rec:o.rec, abs:o.abs, lib:o.lib, plan:o.plan, pdone:o.pdone, pid:o.pid, imp:o.imp, progs:o.progs, cur:o.cur, goals:o.goals, rv:o.rv}; fixAbs(S); migrate(); save(); renderTrain(); renderRec(); renderAbs(); renderPlan(); toast("Данные загружены");
     } catch (e) { toast("Файл не подходит"); }
   };
   rd.readAsText(f); $("file").value = "";
@@ -571,8 +784,6 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
 const WD = ["воскресенье","понедельник","вторник","среда","четверг","пятница","суббота"];
 const WDS = ["вс","пн","вт","ср","чт","пт","сб"];
 let absDate = iso(new Date()), absEdit = false;
-const parseIso = t => { const [y, m, d] = t.split("-").map(Number); return new Date(y, m - 1, d); };
-const shiftIso = (t, n) => { const d = parseIso(t); d.setDate(d.getDate() + n); return iso(d); };
 const akey = (d, id, t) => d + "|" + id + "|" + t;
 const aCount = (d, x) => { let c = 0; for (let t = 0; t < x.s; t++) if (S.abs.done[akey(d, x.id, t)]) c++; return c; };
 const aTotal = () => S.abs.list.reduce((a, x) => a + x.s, 0);
@@ -764,11 +975,13 @@ function libBody() {
     <div class="ed-row"><div><label for="lb-s">Подходов</label><input type="number" id="lb-s" inputmode="numeric" min="1" max="20" value="${v.s}"></div>
     <div><label for="lb-r">Повторов</label><input type="number" id="lb-r" inputmode="numeric" min="1" value="${v.r}"></div>
     <div><label for="lb-u">Единица</label><select id="lb-u">${unitOpts(v.u)}</select></div></div>
+    <label class="chk"><input type="checkbox" id="lb-rec"${v.rec ? " checked" : ""}>Вести рекорды по этому упражнению</label>
+    <div id="lb-ru-wrap"${v.rec ? "" : " hidden"}><label for="lb-ru" style="margin-top:0">Единица результата</label><input type="text" id="lb-ru" list="units" value="${esc(v.ru || "раз")}" maxlength="10"></div>
     <div class="actions"><button class="btn primary wide" type="submit">${e ? "Сохранить" : "Добавить в справочник"}</button>${e ? '<button class="btn wide" type="button" id="lb-cancel">Отмена</button>' : ""}</div></form>`;
   if (!S.lib.length) return h + `<div class="restcard"><b>Справочник пуст</b>Добавьте первое упражнение выше.</div>`;
   h += `<ul class="plain">`;
   S.lib.slice().sort((a, b) => a.n.localeCompare(b.n, "ru")).forEach(x => {
-    h += `<li class="card libcard"><span class="nm">${esc(x.n)}<small>${x.s}×${x.r} ${x.u}</small></span><button class="btn" data-ledit="${x.id}">Изменить</button><button class="btn danger" data-ldel="${x.id}" aria-label="Удалить из справочника">✕</button></li>`;
+    h += `<li class="card libcard"><span class="nm">${esc(x.n)}<small>${x.s}×${x.r} ${x.u}${x.rec ? ", рекорды: " + esc(ruOf(x)) : ""}</small></span><button class="btn" data-ledit="${x.id}">Изменить</button><button class="btn danger" data-ldel="${x.id}" aria-label="Удалить из справочника">✕</button></li>`;
   });
   return h + `</ul>`;
 }
@@ -828,8 +1041,10 @@ $("pl-body").addEventListener("click", e => {
   if (t.dataset.ledit) { libEdit = +t.dataset.ledit; renderPlan(); window.scrollTo(0, 0); return; }
   if (t.dataset.ldel) {
     const x = S.lib.find(v => v.id === +t.dataset.ldel);
-    if (x && confirm("Удалить «" + x.n + "» из справочника? Уже составленные планы не изменятся.")) {
-      S.lib = S.lib.filter(v => v.id !== x.id); if (libEdit === x.id) libEdit = null; save(); renderPlan();
+    const hasRec = x && S.rec.some(q => q.ex === x.id);
+    if (x && confirm("Удалить «" + x.n + "» из справочника? Уже составленные планы не изменятся." + (hasRec ? " Записи рекордов по этому упражнению тоже будут удалены." : ""))) {
+      S.lib = S.lib.filter(v => v.id !== x.id); S.rec = S.rec.filter(q => q.ex !== x.id); delete S.goals[x.id];
+      if (libEdit === x.id) libEdit = null; save(); renderPlan();
     }
     return;
   }
@@ -838,20 +1053,24 @@ $("pl-body").addEventListener("click", e => {
 $("pl-body").addEventListener("submit", e => {
   e.preventDefault();
   const n = $("lb-n").value.trim(), s = Math.round(+$("lb-s").value), r = Math.round(+$("lb-r").value), u = $("lb-u").value;
+  const rec = $("lb-rec").checked, ru = $("lb-ru").value.trim().slice(0, 10) || "раз";
   if (!n) { toast("Введите название"); $("lb-n").focus(); return; }
   if (!(s >= 1 && s <= 20)) { toast("Подходов должно быть от 1 до 20"); return; }
   if (!(r >= 1)) { toast("Введите число повторов"); return; }
   if (libEdit != null) {
-    const x = S.lib.find(v => v.id === libEdit); if (x) Object.assign(x, {n, s, r, u});
+    const x = S.lib.find(v => v.id === libEdit);
+    if (x && x.rec && !rec && S.rec.some(q => q.ex === x.id)) { toast("По упражнению есть записи рекордов. Оставьте галочку или сначала удалите записи"); return; }
+    if (x) { Object.assign(x, {n, s, r, u, rec, ru}); if (!rec) delete S.goals[x.id]; }
     libEdit = null; toast("Сохранено");
   } else {
-    S.lib.push({id:S.lib.reduce((m, v) => Math.max(m, v.id), 0) + 1, n, s, r, u}); toast("Добавлено в справочник");
+    S.lib.push({id:S.lib.reduce((m, v) => Math.max(m, v.id), 0) + 1, n, s, r, u, rec, ru}); toast("Добавлено в справочник");
   }
   save(); renderPlan();
 });
 $("pl-body").addEventListener("change", e => {
   const el = e.target;
   if (el.id === "pl-date") { if (el.value) { pDate = el.value; renderPlan(); } return; }
+  if (el.id === "lb-rec") { $("lb-ru-wrap").hidden = !el.checked; return; }
   if (!el.dataset.f) return;
   const x = pList(pDate).find(v => v.id === +el.dataset.id); if (!x) return;
   const f = el.dataset.f;
@@ -890,7 +1109,7 @@ function copyLink() {
   if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(el.value).then(ok, old); else old();
 }
 
-let incoming = null;
+let incoming = null, incomingProg = null;
 function validatePack(o) {
   if (!o || o.v !== 1 || !Array.isArray(o.p) || o.p.length > 62) throw 0;
   const days = [];
@@ -909,7 +1128,7 @@ function validatePack(o) {
   days.sort((a, b) => a[0] < b[0] ? -1 : 1);
   return {id:String(o.i || "").slice(0, 12), days};
 }
-function closeModal() { $("modal").classList.remove("show"); incoming = null; }
+function closeModal() { $("modal").classList.remove("show"); incoming = null; incomingProg = null; }
 function showIncoming() {
   const inc = incoming, cnt = inc.days.reduce((a, d) => a + d[1].length, 0);
   const seen = inc.id && S.imp.indexOf(inc.id) >= 0;
@@ -948,16 +1167,122 @@ function applyIncoming(mode) {
 $("modal-body").addEventListener("click", e => {
   const id = e.target.id;
   if (id && id.indexOf("tm-") === 0 && tm) { tmClick(id); return; }
-  if (id === "im-add") applyIncoming("add"); else if (id === "im-rep") applyIncoming("replace"); else if (id === "im-cancel") closeModal();
+  if (id === "cp-add") applyProg("add"); else if (id === "cp-upd") applyProg("upd"); else if (id === "cp-copy") applyProg("copy"); else if (id === "cp-cancel") closeModal();
+  else if (id === "im-add") applyIncoming("add"); else if (id === "im-rep") applyIncoming("replace"); else if (id === "im-cancel") closeModal();
 });
 function readIncoming() {
-  const m = location.hash.match(/^#p=([A-Za-z0-9_-]+)$/); if (!m) return;
+  const m = location.hash.match(/^#([pc])=([A-Za-z0-9_-]+)$/); if (!m) return;
   history.replaceState(null, "", location.pathname + location.search);
-  try { incoming = validatePack(b64d(m[1])); } catch (e) { toast("Ссылка повреждена или неполная"); return; }
-  showIncoming();
+  try { if (m[1] === "p") incoming = validatePack(b64d(m[2])); else incomingProg = validateProg(b64d(m[2])); } catch (e) { toast("Ссылка повреждена или неполная"); return; }
+  if (m[1] === "p") showIncoming(); else showIncomingProg();
+}
+function copyText(text) {
+  const ok = () => toast("Ссылка скопирована");
+  const old = () => { const ta = document.createElement("textarea"); ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); ok(); } catch (e) { toast("Не удалось скопировать ссылку"); } ta.remove(); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(ok, old); else old();
+}
+function progLink(p) { return location.origin + location.pathname + "#c=" + b64e({v:1, k:"c", i:p.id, n:p.name, s:p.start, w:p.weeks, d:p.days, r:p.rest, e:p.ex.map(x => [x.n, x.u]), o:p.vol}); }
+function validateProg(o) {
+  if (!o || o.v !== 1 || o.k !== "c") throw 0;
+  const name = String(o.n || "").trim().slice(0, 50), start = String(o.s), weeks = Math.round(+o.w);
+  if (!name || !/^\d{4}-\d{2}-\d{2}$/.test(start) || !(weeks >= 1 && weeks <= 52)) throw 0;
+  if (!Array.isArray(o.d) || !o.d.length || o.d.length > 7) throw 0;
+  const days = Array.from(new Set(o.d.map(Number))); if (days.some(v => !(v >= 0 && v <= 6))) throw 0;
+  if (!Array.isArray(o.e) || !o.e.length || o.e.length > 20) throw 0;
+  const ex = o.e.map(e => { if (!Array.isArray(e)) throw 0; const n = String(e[0]).trim().slice(0, 60); if (!n) throw 0; return {n, u:e[1] === "сек" ? "сек" : "раз"}; });
+  if (!Array.isArray(o.o) || o.o.length !== weeks) throw 0;
+  const vol = o.o.map(row => { if (!Array.isArray(row) || row.length !== ex.length) throw 0; return row.map(v => { const s = Math.round(+v[0]), r = Math.round(+v[1]); if (!(s >= 1 && s <= 20) || !(r >= 1 && r <= 99999)) throw 0; return [s, r]; }); });
+  const rest = (Array.isArray(o.r) ? o.r : []).map(Number).filter(v => v >= 1 && v <= weeks);
+  return {id:String(o.i || "").replace(/[^A-Za-z0-9]/g, "").slice(0, 16), name, start, weeks, days, rest, ex, vol};
+}
+function showIncomingProg() {
+  const c = incomingProg, exists = !!c.id && S.progs.some(x => x.id === c.id);
+  $("modal-body").innerHTML = `<h3 id="modal-t">Получен комплекс</h3>
+    <p style="margin:0"><b>${esc(c.name)}</b></p>
+    <ul><li>недель: ${c.weeks}</li><li>тренировок в неделю: ${c.days.length}</li><li>упражнений: ${c.ex.length}</li></ul>
+    <label for="cp-start" style="margin-top:0">Дата начала</label><input type="date" id="cp-start" value="${esc(c.start)}">
+    ${exists ? '<p class="note">Такой комплекс у вас уже есть. «Обновить» заменит объёмы, отметки сохранятся.</p><button class="btn primary" id="cp-upd">Обновить имеющийся</button><button class="btn" id="cp-copy">Добавить копией</button>' : '<button class="btn primary" id="cp-add">Добавить комплекс</button>'}
+    <button class="btn" id="cp-cancel">Отмена</button>`;
+  $("modal").classList.add("show"); const f = $("cp-add") || $("cp-upd"); if (f) f.focus();
+}
+function applyProg(mode) {
+  const c = incomingProg; if (!c) return;
+  const st = $("cp-start").value, start = /^\d{4}-\d{2}-\d{2}$/.test(st) ? st : c.start;
+  const prog = {id:c.id, name:c.name, start, weeks:c.weeks, days:c.days, rest:c.rest, ex:c.ex, vol:c.vol};
+  if (mode === "upd") { const i = S.progs.findIndex(x => x.id === c.id); if (i >= 0) S.progs[i] = prog; else S.progs.push(prog); }
+  else {
+    if (mode === "copy" || !prog.id || prog.id === "legs" || S.progs.some(x => x.id === prog.id)) prog.id = "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 4);
+    S.progs.push(prog);
+  }
+  S.cur = prog.id; save(); closeModal();
+  document.querySelector('nav button[data-tab="train"]').click();
+  trMode = "view"; sel = initialSel(prog); renderTrain(); toast("Комплекс добавлен");
 }
 window.addEventListener("hashchange", readIncoming);
 
+
+/* ---------- Упражнения для рекордов ---------- */
+function renderRxPanel() {
+  const free = S.lib.filter(x => !x.rec);
+  $("rx-panel").innerHTML = `<h3>Упражнение для рекордов</h3>
+    ${free.length ? `<label for="rx-lib" style="margin-top:0">Из справочника</label><select id="rx-lib"><option value="">Выберите упражнение…</option>${free.map(x => `<option value="${x.id}">${esc(x.n)}</option>`).join("")}</select>
+    <label for="rx-lu">Единица результата</label><input type="text" id="rx-lu" list="units" value="раз" maxlength="10">
+    <div class="actions"><button class="btn primary wide" type="button" id="rx-addlib">Вести рекорды по нему</button></div>
+    <div class="rx-sep"></div>` : ""}
+    <label for="rx-n"${free.length ? "" : ' style="margin-top:0"'}>Новое упражнение</label><input type="text" id="rx-n" maxlength="60" placeholder="например: Подтягивания">
+    <label for="rx-u">Единица результата</label><input type="text" id="rx-u" list="units" value="раз" maxlength="10">
+    <p class="note">Новое упражнение появится и в справочнике, там можно задать подходы и повторы для плана.</p>
+    <div class="actions"><button class="btn primary wide" type="button" id="rx-create">Создать и добавить</button><button class="btn wide" type="button" id="rx-close">Закрыть</button></div>`;
+}
+function trackEx(x, unit) {
+  x.rec = true; x.ru = (unit || "").trim().slice(0, 10) || "раз";
+  save(); chEx = x.id; chSel = null; chInit = true;
+  $("rx-panel").hidden = true; renderRec(); $("f-ex").value = String(x.id); qtyLabel();
+  toast("Добавлено: " + x.n);
+}
+$("rx-open").addEventListener("click", () => { renderRxPanel(); $("rx-panel").hidden = false; $("rx-panel").scrollIntoView({block:"nearest"}); });
+$("rx-panel").addEventListener("change", e => {
+  if (e.target.id === "rx-lib") { const x = exOf(+e.target.value); if (x) $("rx-lu").value = x.u === "сек" ? "сек" : "раз"; }
+});
+$("rx-panel").addEventListener("click", e => {
+  const id = e.target.id;
+  if (id === "rx-close") { $("rx-panel").hidden = true; return; }
+  if (id === "rx-addlib") {
+    const x = exOf(+$("rx-lib").value); if (!x) { toast("Выберите упражнение из списка"); return; }
+    trackEx(x, $("rx-lu").value); return;
+  }
+  if (id === "rx-create") {
+    const n = $("rx-n").value.trim(); if (!n) { toast("Введите название"); $("rx-n").focus(); return; }
+    let x = S.lib.find(v => v.n.toLowerCase() === n.toLowerCase());
+    if (x && x.rec) { toast("Такое упражнение уже есть в рекордах"); return; }
+    if (!x) { x = {id:S.lib.reduce((m, v) => Math.max(m, v.id), 0) + 1, n, s:3, r:10, u:"раз"}; S.lib.push(x); }
+    trackEx(x, $("rx-u").value);
+  }
+});
+
+/* ---------- Цели ---------- */
+function renderGoals() {
+  const best = {};
+  S.rec.forEach(r => { if (!(r.ex in best) || r.q > best[r.ex]) best[r.ex] = r.q; });
+  $("goals").innerHTML = !trk().length ? `<p class="note" style="margin:0">Сначала добавьте упражнение для рекордов.</p>` : trk().map(x => {
+    const i = x.id, u = ruOf(x), g = S.goals[i], b = best[i];
+    let h = `<div class="goal"><label for="g${i}">${esc(x.n)}</label><div class="goal-in"><input type="number" id="g${i}" inputmode="decimal" min="0" step="any" value="${g ? g : ""}" data-gi="${i}" placeholder="Цель не задана"><span class="u">${esc(u)}</span></div>`;
+    if (g) {
+      const pct = b === undefined ? 0 : Math.min(100, Math.round(b / g * 100));
+      const info = b === undefined ? "Пока нет результатов" : b >= g ? "Цель достигнута: " + fnum(b) + " из " + fnum(g) + " " + u : "Лучший результат " + fnum(b) + ", осталось " + fnum(g - b) + " " + u + " (" + pct + "%)";
+      h += `<div class="gbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" aria-label="Прогресс к цели"><span style="width:${pct}%"></span></div><div class="note num" style="margin-top:4px">${info}</div>`;
+    }
+    return h + `</div>`;
+  }).join("");
+}
+$("goals").addEventListener("change", e => {
+  const el = e.target, i = el.dataset.gi; if (i === undefined) return;
+  const raw = el.value.trim().replace(",", ".");
+  if (raw === "") { delete S.goals[i]; }
+  else { const v = parseFloat(raw); if (!(v > 0)) { toast("Цель должна быть больше нуля"); el.value = S.goals[i] || ""; return; } S.goals[i] = v; }
+  save(); renderGoals(); renderChart();
+  toast(raw === "" ? "Цель убрана" : "Цель сохранена");
+});
 
 /* ---------- График ---------- */
 let chEx = 0, chRange = 0, chSel = null, chInit = false;
@@ -966,7 +1291,10 @@ const fnum = v => String(Number(v.toFixed(1)));
 
 function renderChart() {
   if (!chInit && S.rec.length) { chEx = S.rec.slice().sort(cmp).pop().ex; chInit = true; }
-  const x = RX[chEx];
+  if (!exOf(chEx) || !exOf(chEx).rec) chEx = trk().length ? trk()[0].id : 0;
+  const x = exOf(chEx);
+  if (!x) { $("ch-range").innerHTML = ""; $("ch-box").innerHTML = `<div class="restcard"><b>Нет упражнений</b>Добавьте упражнение для рекордов.</div>`; $("ch-read").textContent = ""; return; }
+  const ru = ruOf(x);
   $("ch-ex").value = String(chEx);
   $("ch-range").innerHTML = [[0, "Всё время"], [90, "90 дней"], [30, "30 дней"]].map(([v, l]) => `<button data-r="${v}" class="${chRange === v ? "sel" : ""}"><b>${l}</b></button>`).join("");
 
@@ -983,7 +1311,7 @@ function renderChart() {
   if (chSel === null || chSel >= n) chSel = n - 1;
 
   const W = 360, H = 230, L = 44, R = 14, T = 14, B = 30;
-  const qs = pts.map(p => p.q), mn = Math.min(...qs), mx = Math.max(...qs);
+  const qs = pts.map(p => p.q), dmn = Math.min(...qs), dmx = Math.max(...qs), goal = S.goals[chEx] || 0, mn = goal ? Math.min(dmn, goal) : dmn, mx = goal ? Math.max(dmx, goal) : dmx;
   let lo, hi;
   if (mn === mx) { const pd = Math.max(1, Math.abs(mx) * 0.1); lo = Math.max(0, mn - pd); hi = mx + pd; }
   else { const pd = (mx - mn) * 0.15; lo = Math.max(0, mn - pd); hi = mx + pd; }
@@ -1001,22 +1329,26 @@ function renderChart() {
     g += `<text x="${X(i).toFixed(1)}" y="${H - 8}" text-anchor="${a}" font-size="12" fill="#5B6B7F">${pts[i].d.slice(8)}.${pts[i].d.slice(5, 7)}</text>`;
   });
   if (n > 1) {
-    g += `<line x1="${L}" x2="${W - R}" y1="${Y(mx).toFixed(1)}" y2="${Y(mx).toFixed(1)}" stroke="#E0A100" stroke-width="1.5" stroke-dasharray="5 4"/>`;
+    g += `<line x1="${L}" x2="${W - R}" y1="${Y(dmx).toFixed(1)}" y2="${Y(dmx).toFixed(1)}" stroke="#E0A100" stroke-width="1.5" stroke-dasharray="5 4"/>`;
     g += `<polyline points="${pts.map((p, i) => X(i).toFixed(1) + "," + Y(p.q).toFixed(1)).join(" ")}" fill="none" stroke="#A02C5C" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
+  }
+  if (goal) {
+    const gy = Y(goal).toFixed(1);
+    g += `<line x1="${L}" x2="${W - R}" y1="${gy}" y2="${gy}" stroke="#2A9D6A" stroke-width="2" stroke-dasharray="7 4"/><text x="${W - R}" y="${(Y(goal) - 6).toFixed(1)}" text-anchor="end" font-size="12" font-weight="700" fill="#1F7A52">цель ${fnum(goal)}</text>`;
   }
   pts.forEach((p, i) => {
     const cx = X(i).toFixed(1), cy = Y(p.q).toFixed(1), sel = i === chSel;
     g += `<circle cx="${cx}" cy="${cy}" r="${sel ? 7 : 4.5}" fill="${p.rc ? "#E0A100" : "#A02C5C"}" stroke="${sel ? "#2B1020" : "#fff"}" stroke-width="${sel ? 2.5 : 2}"/><circle cx="${cx}" cy="${cy}" r="17" fill="transparent" data-i="${i}"/>`;
   });
-  $("ch-box").innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="График: ${esc(x.n)}, точек ${n}, от ${fnum(mn)} до ${fnum(mx)} ${x.u}">${g}</svg>`;
+  $("ch-box").innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="График: ${esc(x.n)}, точек ${n}, от ${fnum(dmn)} до ${fnum(dmx)} ${esc(ru)}${goal ? ", цель " + fnum(goal) : ""}">${g}</svg>`;
 
   const p = pts[chSel], prev = chSel > 0 ? pts[chSel - 1] : null;
-  let t = isoRu(p.d) + ": " + fnum(p.q) + " " + x.u;
+  let t = isoRu(p.d) + ": " + fnum(p.q) + " " + ru;
   if (p.rc) t += ", рекорд";
   if (prev) { const df = p.q - prev.q; t += df === 0 ? ", как в прошлый раз" : ", " + (df > 0 ? "+" : "−") + fnum(Math.abs(df)) + " к прошлому"; }
+  if (goal) t += ". Цель " + fnum(goal) + " " + ru + (top >= goal ? ", достигнута" : ", осталось " + fnum(goal - top));
   $("ch-read").textContent = t;
 }
-$("ch-ex").innerHTML = RX.map((v, i) => `<option value="${i}">${esc(v.n)}</option>`).join("");
 $("ch-ex").addEventListener("change", () => { chEx = +$("ch-ex").value; chSel = null; renderChart(); });
 $("ch-range").addEventListener("click", e => { const b = e.target.closest("[data-r]"); if (!b) return; chRange = +b.dataset.r; chSel = null; renderChart(); });
 $("ch-box").addEventListener("click", e => { const c = e.target.closest("[data-i]"); if (!c) return; chSel = +c.dataset.i; renderChart(); });
