@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#4A2237">
+<script>try{var P=JSON.parse(localStorage.getItem("legs-profiles-v1")),c=P&&P.list&&(P.list.find(function(x){return x.id===P.cur})||P.list[0]);if(c&&c.theme){var r=document.documentElement.style;for(var k in c.theme)r.setProperty("--"+k,c.theme[k]);var m=document.querySelector('meta[name="theme-color"]');if(m&&c.theme.hdr)m.content=c.theme.hdr}}catch(e){}</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -11,7 +12,7 @@
 <style>
 :root{
   --ink:#2B1020; --paper:#6B3550; --hdr:#4A2237; --card:#FFFFFF; --line:#E8D5DF; --mute:#6E5563;
-  --accent:#E9A9C2; --blue:#A02C5C; --green:#2A9D6A; --gold:#B7810A; --gold-bg:#FFF1CC; --red:#B3261E;
+  --accent:#E9A9C2; --blue:#A02C5C; --chipb:#86586F; --chipr:#CDA3B7; --soft:#EBD0DC; --tint:#EBDDE4; --green:#2A9D6A; --gold:#B7810A; --gold-bg:#FFF1CC; --red:#B3261E;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--paper);color:var(--ink)}
@@ -26,7 +27,7 @@ button{cursor:pointer}
 .top{background:var(--hdr);color:#fff;padding:calc(14px + env(safe-area-inset-top)) 14px 12px}
 .top-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
 .top h1{margin:0;font-size:22px;font-weight:700;letter-spacing:.2px}
-.total{font-size:14px;color:#EBD0DC}
+.total{font-size:14px;color:var(--soft)}
 .total:empty::before{content:"\00a0"}
 .brand{display:flex;align-items:center;gap:12px}
 .bunny{width:44px;height:51px;flex:0 0 auto}
@@ -35,17 +36,17 @@ button{cursor:pointer}
 /* лента недель — главный элемент */
 .strip{display:flex;gap:6px;overflow-x:auto;padding:12px 0 4px;scrollbar-width:none;scroll-snap-type:x proximity}
 .strip::-webkit-scrollbar{display:none}
-.chip{flex:0 0 auto;width:44px;height:56px;border-radius:10px;border:1.5px solid #86586F;
+.chip{flex:0 0 auto;width:44px;height:56px;border-radius:10px;border:1.5px solid var(--chipb);
   background:linear-gradient(to top,var(--green) var(--p,0%),rgba(255,255,255,.06) var(--p,0%));
   color:#fff;font-weight:700;font-size:17px;display:grid;place-items:center;position:relative;scroll-snap-align:center}
-.chip.rest{border-style:dashed;color:#CDA3B7;background:none}
+.chip.rest{border-style:dashed;color:var(--chipr);background:none}
 .chip.sel{border-color:#fff;box-shadow:0 0 0 2px #fff}
 .chip.sel::after{content:"";position:absolute;bottom:-9px;width:18px;height:3px;border-radius:2px;background:#fff}
 
 main{padding:14px}
 .weekhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:2px 0 12px}
 .weekhead h2{margin:0;font-size:20px;color:#fff}
-.weekhead .dates{color:#EBD0DC;font-size:14px}
+.weekhead .dates{color:var(--soft);font-size:14px}
 .pill{display:inline-block;padding:4px 12px;border-radius:999px;background:var(--ink);color:#fff;font-size:14px;font-weight:600}
 
 .seg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
@@ -54,7 +55,7 @@ main{padding:14px}
 .seg button b{font-size:17px}
 .seg button span{font-size:13px;color:var(--mute)}
 .seg button.sel{background:var(--accent);border-color:var(--accent);color:var(--ink)}
-.seg button.sel span{color:#4A2237}
+.seg button.sel span{color:var(--hdr)}
 .seg button.full:not(.sel){border-color:var(--green)}
 .seg button.full b::after{content:" ✓";color:var(--green)}
 .seg button.full.sel b::after{color:#fff}
@@ -109,7 +110,7 @@ nav button{min-height:64px;border:0;background:none;padding:0 1px;font-size:11px
 nav button svg{width:22px;height:22px}
 nav button[aria-current=page]{color:var(--blue)}
 .dchip{display:flex;flex-direction:column;gap:1px}
-.dchip small{font-size:11px;font-weight:500;color:#EBD0DC}
+.dchip small{font-size:11px;font-weight:500;color:var(--soft)}
 .dchip.sel small{color:#fff}
 .daterow{display:flex;gap:8px;margin-bottom:12px}
 .daterow input{flex:1}
@@ -127,7 +128,7 @@ nav button[aria-current=page]{color:var(--blue)}
 .goal label{margin:0 0 4px;color:var(--ink);font-weight:600}
 .goal-in{display:flex;align-items:center;gap:8px}
 .goal-in .u{color:var(--mute);min-width:32px}
-.gbar{height:8px;border-radius:4px;background:#EBDDE4;overflow:hidden;margin-top:8px}
+.gbar{height:8px;border-radius:4px;background:var(--tint);overflow:hidden;margin-top:8px}
 .gbar span{display:block;height:100%;background:var(--green)}
 .bmi-big{font-size:46px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
 .bmi-cat{font-size:17px;font-weight:600;margin-top:4px}
@@ -145,8 +146,34 @@ nav button[aria-current=page]{color:var(--blue)}
 .mact{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
 .mact .btn,.mact a.btn{min-height:40px;padding:0 12px;font-size:14px;display:inline-flex;align-items:center;text-decoration:none;color:var(--ink)}
 .rx-sep{border-top:1px solid var(--line);margin:16px 0 4px}
+.logo{flex:0 0 auto;width:50px;height:54px;padding:0;border:0;background:none;display:grid;place-items:center;border-radius:14px}
+.logo svg{width:44px;height:51px}
+.logo img{width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid var(--soft)}
+.lt{width:46px;height:46px;border-radius:50%;background:var(--accent);color:var(--ink);font-weight:700;font-size:24px;display:grid;place-items:center}
+.pname{margin-left:auto;align-self:flex-start;max-width:32%;font-size:12px;color:var(--soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:4px 10px;border:1px solid var(--chipb);border-radius:999px}
+.brand > div{min-width:0}
+.plg{display:grid;place-items:center;width:52px;height:52px;border-radius:50%;overflow:hidden;flex:0 0 auto}
+.plg svg{width:36px;height:42px}
+.plg img{width:100%;height:100%;object-fit:cover;border:0;border-radius:0}
+.plg .lt{background:none;color:#fff;width:auto;height:auto}
+.pfrow{width:100%;display:flex;align-items:center;gap:12px;min-height:64px;padding:6px 10px;border:1.5px solid var(--line);border-radius:14px;background:#fff;text-align:left;margin-bottom:8px}
+.pfrow.cur{border-color:var(--blue);border-width:2.5px}
+.pfrow .nm{flex:1;font-weight:600;font-size:17px;color:var(--ink)}
+.pfrow small{color:var(--mute)}
+.pf-prev{border-radius:14px;padding:10px;margin:8px 0}
+.pf-hdr{display:flex;align-items:center;gap:10px;border-radius:10px;padding:8px 10px;color:#fff;font-size:18px}
+.pf-hdr .plg{width:44px;height:44px;background:none}
+.pf-btn{margin-top:8px;border-radius:10px;padding:12px;text-align:center;font-weight:700}
+.swatches{display:flex;gap:8px;flex-wrap:wrap}
+.sw{width:44px;height:44px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1.5px var(--line);padding:0;margin:0}
+.sw.on{box-shadow:0 0 0 3px var(--ink)}
+.sw.custom{position:relative;display:grid;place-items:center;background:conic-gradient(#e33,#ec3,#4c4,#3cc,#35e,#c3c,#e33);color:#fff;font-weight:700}
+.sw.custom input{position:absolute;inset:0;opacity:0;width:100%;height:100%}
+.logos{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;justify-items:center}
+.lg{padding:2px;background:none;border:2.5px solid transparent;border-radius:50%}
+.lg.on{border-color:var(--ink)}
 .bh2{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:18px 2px 8px;color:#fff;font-size:18px}
-.bh2 small{font-size:13px;font-weight:400;color:#EBD0DC}
+.bh2 small{font-size:13px;font-weight:400;color:var(--soft)}
 .daterow + .bh2,.banner + .bh2{margin-top:4px}
 .progrow{display:flex;gap:8px;margin-bottom:12px}
 .progrow select{flex:1;min-width:0}
@@ -187,7 +214,7 @@ input[readonly]{background:#F2F5F8;font-size:13px}
 .sets{align-items:center}
 .tm-clock{font-size:68px;font-weight:700;text-align:center;font-variant-numeric:tabular-nums;margin:6px 0 10px;line-height:1.1}
 .tm-clock.done{color:var(--green)}
-.tm-bar{height:10px;border-radius:5px;background:#EBDDE4;overflow:hidden}
+.tm-bar{height:10px;border-radius:5px;background:var(--tint);overflow:hidden}
 .tm-bar span{display:block;height:100%;width:0;background:var(--blue);transition:width .25s linear}
 .tm-msg{text-align:center;font-size:16px;margin:10px 0 4px;color:var(--mute);min-height:24px}
 .tm-msg.done{color:var(--green);font-weight:700}
@@ -200,7 +227,7 @@ input[readonly]{background:#F2F5F8;font-size:13px}
 </style>
 </head>
 <body>
-<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="bunny" viewBox="0 0 120 140"><g stroke="#EBC3D3" stroke-width="1.6" stroke-linejoin="round">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="logo-bunny" viewBox="0 0 120 140"><g stroke="#EBC3D3" stroke-width="1.6" stroke-linejoin="round">
 <ellipse cx="44" cy="34" rx="13" ry="31" transform="rotate(-7 44 34)" fill="#fff"/>
 <ellipse cx="76" cy="34" rx="13" ry="31" transform="rotate(7 76 34)" fill="#fff"/>
 </g>
@@ -220,11 +247,32 @@ input[readonly]{background:#F2F5F8;font-size:13px}
 <ellipse cx="60" cy="89" rx="4" ry="3" fill="#FF8DB5"/>
 <path d="M60 92 v3 M60 95 q-4 4.5 -8.5 1 M60 95 q4 4.5 8.5 1" fill="none" stroke="#B05A7A" stroke-width="1.6" stroke-linecap="round"/>
 <path d="M36 90 L20 86 M36 94 L21 97 M84 90 L100 86 M84 94 L99 97" stroke="#D7B3C3" stroke-width="1.3" stroke-linecap="round" fill="none"/>
-</symbol></svg>
+</symbol><symbol id="logo-fox" viewBox="0 0 120 140"><g stroke="#F6D9C2" stroke-width="1.6" stroke-linejoin="round"><polygon points="22,64 24,14 58,46" fill="#E8832A"/><polygon points="98,64 96,14 62,46" fill="#E8832A"/></g>
+<polygon points="31,56 31,29 50,46" fill="#3A2218"/><polygon points="89,56 89,29 70,46" fill="#3A2218"/>
+<g stroke="#F6D9C2" stroke-width="1.6"><ellipse cx="60" cy="124" rx="32" ry="17" fill="#E8832A"/><ellipse cx="60" cy="86" rx="40" ry="34" fill="#E8832A"/></g>
+<path d="M21 90 Q35 119 60 121 Q85 119 99 90 Q82 104 60 104 Q38 104 21 90Z" fill="#fff"/>
+<circle cx="46" cy="82" r="4.4" fill="#2B1020"/><circle cx="74" cy="82" r="4.4" fill="#2B1020"/><circle cx="47.4" cy="80.6" r="1.4" fill="#fff"/><circle cx="75.4" cy="80.6" r="1.4" fill="#fff"/>
+<ellipse cx="60" cy="100" rx="5.5" ry="4" fill="#2B1020"/><path d="M60 104 v4 M60 108 q-4 4 -8 1 M60 108 q4 4 8 1" stroke="#2B1020" stroke-width="1.5" fill="none" stroke-linecap="round"/></symbol><symbol id="logo-bear" viewBox="0 0 120 140"><g stroke="#E7CBB2" stroke-width="1.6"><circle cx="33" cy="46" r="15" fill="#8A5A3B"/><circle cx="87" cy="46" r="15" fill="#8A5A3B"/><ellipse cx="60" cy="124" rx="34" ry="18" fill="#8A5A3B"/><circle cx="60" cy="84" r="38" fill="#8A5A3B"/></g>
+<circle cx="33" cy="46" r="7" fill="#D9A47E"/><circle cx="87" cy="46" r="7" fill="#D9A47E"/>
+<ellipse cx="60" cy="96" rx="17" ry="13" fill="#E9CDAE"/>
+<circle cx="47" cy="80" r="4.2" fill="#2B1020"/><circle cx="73" cy="80" r="4.2" fill="#2B1020"/><circle cx="48.4" cy="78.6" r="1.4" fill="#fff"/><circle cx="74.4" cy="78.6" r="1.4" fill="#fff"/>
+<ellipse cx="60" cy="90" rx="6.5" ry="4.6" fill="#2B1020"/><path d="M60 94 v4 M60 98 q-4 4.5 -8 1 M60 98 q4 4.5 8 1" stroke="#2B1020" stroke-width="1.5" fill="none" stroke-linecap="round"/></symbol><symbol id="logo-cat" viewBox="0 0 120 140"><g stroke="#D5DAE2" stroke-width="1.6" stroke-linejoin="round"><polygon points="24,68 27,16 58,46" fill="#9AA3AF"/><polygon points="96,68 93,16 62,46" fill="#9AA3AF"/><ellipse cx="60" cy="124" rx="32" ry="17" fill="#9AA3AF"/><ellipse cx="60" cy="86" rx="38" ry="33" fill="#9AA3AF"/></g>
+<polygon points="32,58 33,32 49,46" fill="#F4A9C0"/><polygon points="88,58 87,32 71,46" fill="#F4A9C0"/>
+<path d="M54 56 v10 M60 54 v12 M66 56 v10" stroke="#6D7683" stroke-width="2.4" stroke-linecap="round"/>
+<ellipse cx="46" cy="82" rx="5.6" ry="6.2" fill="#8FD17F"/><ellipse cx="74" cy="82" rx="5.6" ry="6.2" fill="#8FD17F"/><ellipse cx="46" cy="82" rx="2" ry="5" fill="#2B1020"/><ellipse cx="74" cy="82" rx="2" ry="5" fill="#2B1020"/>
+<polygon points="55,95 65,95 60,101" fill="#F4A9C0"/><path d="M60 101 q-4 5 -9 1 M60 101 q4 5 9 1" stroke="#2B1020" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+<path d="M38 96 L20 92 M38 100 L21 104 M82 96 L100 92 M82 100 L99 104" stroke="#E6EAF0" stroke-width="1.3" stroke-linecap="round" fill="none"/></symbol><symbol id="logo-panda" viewBox="0 0 120 140"><g stroke="#D9D2D6" stroke-width="1.6"><circle cx="32" cy="44" r="14" fill="#2B1020"/><circle cx="88" cy="44" r="14" fill="#2B1020"/><ellipse cx="60" cy="124" rx="34" ry="18" fill="#fff"/><circle cx="60" cy="84" r="38" fill="#fff"/></g>
+<ellipse cx="45" cy="80" rx="9" ry="11.5" transform="rotate(20 45 80)" fill="#2B1020"/><ellipse cx="75" cy="80" rx="9" ry="11.5" transform="rotate(-20 75 80)" fill="#2B1020"/>
+<circle cx="46" cy="80" r="3.4" fill="#fff"/><circle cx="74" cy="80" r="3.4" fill="#fff"/><circle cx="46.6" cy="80.4" r="1.6" fill="#2B1020"/><circle cx="74.6" cy="80.4" r="1.6" fill="#2B1020"/>
+<ellipse cx="60" cy="94" rx="6" ry="4.2" fill="#2B1020"/><path d="M60 98 v3 M60 101 q-4 4 -8 1 M60 101 q4 4 8 1" stroke="#2B1020" stroke-width="1.5" fill="none" stroke-linecap="round"/></symbol><symbol id="logo-star" viewBox="0 0 120 140"><polygon points="60.0,22.0 73.5,55.4 109.5,57.9 81.9,81.1 90.6,116.1 60.0,97.0 29.4,116.1 38.1,81.1 10.5,57.9 46.5,55.4" fill="#F6C945" stroke="#FFF1B8" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="51" cy="78" r="3.6" fill="#2B1020"/><circle cx="69" cy="78" r="3.6" fill="#2B1020"/><circle cx="52.2" cy="76.8" r="1.2" fill="#fff"/><circle cx="70.2" cy="76.8" r="1.2" fill="#fff"/>
+<path d="M52 88 Q60 96 68 88" stroke="#2B1020" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+<circle cx="46" cy="87" r="4" fill="#F29B7A" opacity=".6"/><circle cx="74" cy="87" r="4" fill="#F29B7A" opacity=".6"/>
+<path d="M40 60 Q60 50 80 60" stroke="#E4572E" stroke-width="5" fill="none" stroke-linecap="round"/></symbol></svg>
 
 <section id="v-train" class="view">
   <header class="top">
-    <div class="brand"><svg class="bunny" aria-hidden="true"><use href="#bunny"/></svg><div><h1>Тренировки фигурка</h1><div class="total num" id="total"></div></div></div>
+    <div class="brand"><button class="logo prof-open" type="button" aria-label="Профили"></button><div><h1>Тренировки фигурка</h1><div class="total num" id="total"></div></div></div>
     <div class="strip" id="strip" aria-label="Недели"></div>
   </header>
   <main>
@@ -236,7 +284,7 @@ input[readonly]{background:#F2F5F8;font-size:13px}
 
 <section id="v-rec" class="view" hidden>
   <header class="top">
-    <div class="brand"><svg class="bunny" aria-hidden="true"><use href="#bunny"/></svg><div><h1>Рекорды</h1><div class="total" id="rec-total"></div></div></div>
+    <div class="brand"><button class="logo prof-open" type="button" aria-label="Профили"></button><div><h1>Рекорды</h1><div class="total" id="rec-total"></div></div></div>
   </header>
   <main>
     <form class="card" id="form" novalidate>
@@ -278,7 +326,7 @@ input[readonly]{background:#F2F5F8;font-size:13px}
 
 <section id="v-abs" class="view" hidden>
   <header class="top">
-    <div class="brand"><svg class="bunny" aria-hidden="true"><use href="#bunny"/></svg><div><h1>Пресс</h1><div class="total num" id="abs-total"></div></div></div>
+    <div class="brand"><button class="logo prof-open" type="button" aria-label="Профили"></button><div><h1>Пресс</h1><div class="total num" id="abs-total"></div></div></div>
     <div class="strip" id="abs-strip" aria-label="Последние дни"></div>
   </header>
   <main>
@@ -289,7 +337,7 @@ input[readonly]{background:#F2F5F8;font-size:13px}
 
 <section id="v-plan" class="view" hidden>
   <header class="top">
-    <div class="brand"><svg class="bunny" aria-hidden="true"><use href="#bunny"/></svg><div><h1>План</h1><div class="total num" id="pl-total"></div></div></div>
+    <div class="brand"><button class="logo prof-open" type="button" aria-label="Профили"></button><div><h1>План</h1><div class="total num" id="pl-total"></div></div></div>
     <div class="strip" id="pl-strip" aria-label="Дни плана"></div>
   </header>
   <main>
@@ -300,12 +348,12 @@ input[readonly]{background:#F2F5F8;font-size:13px}
 </section>
 
 <section id="v-body" class="view" hidden>
-  <header class="top"><div class="brand"><svg class="bunny" aria-hidden="true"><use href="#bunny"/></svg><div><h1>Вес и ИМТ</h1><div class="total num" id="b-total"></div></div></div></header>
+  <header class="top"><div class="brand"><button class="logo prof-open" type="button" aria-label="Профили"></button><div><h1>Вес и ИМТ</h1><div class="total num" id="b-total"></div></div></div></header>
   <main id="b-main"></main>
 </section>
 
 <section id="v-media" class="view" hidden>
-  <header class="top"><div class="brand"><svg class="bunny" aria-hidden="true"><use href="#bunny"/></svg><div><h1>Библиотека</h1><div class="total num" id="m-total"></div></div></div></header>
+  <header class="top"><div class="brand"><button class="logo prof-open" type="button" aria-label="Профили"></button><div><h1>Библиотека</h1><div class="total num" id="m-total"></div></div></div></header>
   <main id="m-main"></main>
 </section>
 
@@ -339,7 +387,20 @@ const WK = {
 };
 const RX0 = [["Двойные прыжки на скакалке — 2 ноги", "раз"], ["Двойные прыжки на скакалке — левая нога", "раз"], ["Двойные прыжки на скакалке — правая нога", "раз"], ["Прыжки в длину — с двух ног", "см"], ["Прыжки в длину — с одной ноги", "см"]];
 
-const K = "legs-tracker-v1";
+const PK = "legs-profiles-v1";
+const COLORS = [["Роза", {h:330}], ["Красный", {h:355}], ["Оранжевый", {h:24}], ["Зелёный", {h:145}], ["Бирюзовый", {h:180}], ["Синий", {h:215}], ["Фиолетовый", {h:275}], ["Графит", {h:220, g:1}]];
+const LOGOS = ["bunny", "fox", "bear", "cat", "panda", "star"];
+function hsl2hex(h, s, l) { s /= 100; l /= 100; const a = s * Math.min(l, 1 - l); const f = n => { const k = (n + h / 30) % 12, c = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1); return Math.round(255 * c).toString(16).padStart(2, "0"); }; return "#" + f(0) + f(8) + f(4); }
+function themeOf(c) { const h = c.h, k = c.g ? 0.14 : 1, x = (s, l) => hsl2hex(h, s * k, l); return {paper:x(34, 31), hdr:x(37, 21), accent:x(58, 79), blue:x(57, 40), chipb:x(22, 42), chipr:x(28, 70), soft:x(40, 88), ink:x(45, 10), mute:x(12, 38), line:x(28, 90), tint:x(28, 90)}; }
+function loadProfiles() {
+  try { const o = JSON.parse(localStorage.getItem(PK)); if (o && Array.isArray(o.list) && o.list.length) return o; } catch (e) {}
+  return {cur:"main", list:[{id:"main", name:"Основной", key:"legs-tracker-v1", color:{h:330}, logo:{t:"bunny"}}]};
+}
+let PROF = loadProfiles();
+const CUR = PROF.list.find(x => x.id === PROF.cur) || PROF.list[0];
+const K = CUR.key;
+let PAL = CUR.theme || {paper:"#6B3550", hdr:"#4A2237", accent:"#E9A9C2", blue:"#A02C5C", chipb:"#86586F", chipr:"#CDA3B7", soft:"#EBD0DC", ink:"#2B1020", mute:"#6E5563", line:"#E8D5DF", tint:"#EBDDE4"};
+function saveProfiles() { try { localStorage.setItem(PK, JSON.stringify(PROF)); } catch (e) {} }
 const $ = id => document.getElementById(id);
 const pad = n => String(n).padStart(2, "0");
 const fmt = d => pad(d.getDate()) + "." + pad(d.getMonth() + 1);
@@ -348,6 +409,98 @@ const isoRu = s => s.slice(8, 10) + "." + s.slice(5, 7) + "." + s.slice(0, 4);
 const parseIso = t => { const [y, m, d] = t.split("-").map(Number); return new Date(y, m - 1, d); };
 const shiftIso = (t, n) => { const d = parseIso(t); d.setDate(d.getDate() + n); return iso(d); };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ---------- Профили ---------- */
+function logoHTML(p) {
+  const l = p.logo || {t:"bunny"};
+  if (l.t === "img" && l.img) return `<img src="${esc(l.img)}" alt="">`;
+  if (l.t === "letter") return `<span class="lt">${esc((p.name || "").trim().charAt(0).toUpperCase() || "?")}</span>`;
+  return `<svg viewBox="0 0 120 140" aria-hidden="true"><use href="#logo-${LOGOS.indexOf(l.t) >= 0 ? l.t : "bunny"}"/></svg>`;
+}
+function renderProfileUI() {
+  document.querySelectorAll(".logo").forEach(b => b.innerHTML = logoHTML(CUR));
+  document.querySelectorAll(".brand").forEach(b => { let n = b.querySelector(".pname"); if (!n) { n = document.createElement("span"); n.className = "pname"; b.appendChild(n); } n.textContent = PROF.list.length > 1 ? CUR.name : ""; n.hidden = PROF.list.length <= 1; });
+}
+const sameColor = (a, b) => a.h === b.h && !!a.g === !!b.g;
+let pfDraft = null;
+function pfMenu() {
+  $("modal-body").innerHTML = `<h3 id="modal-t">Профили</h3><ul class="plain">${PROF.list.map(p => `<li><button class="pfrow${p.id === CUR.id ? " cur" : ""}" type="button" data-pf-switch="${esc(p.id)}"><span class="plg" style="background:${(p.theme || themeOf(p.color || {h:330})).hdr}">${logoHTML(p)}</span><span class="nm">${esc(p.name)}</span>${p.id === CUR.id ? "<small>текущий</small>" : ""}</button></li>`).join("")}</ul>
+    <button class="btn primary" type="button" data-pf="new">＋ Новый профиль</button>
+    <button class="btn" type="button" data-pf="edit">Изменить текущий профиль</button>
+    <button class="btn" type="button" data-pf="close">Закрыть</button>
+    <p class="note">У каждого профиля свои тренировки, рекорды, вес, план и библиотека. Данные хранятся на этом телефоне.</p>`;
+  $("modal").classList.add("show");
+}
+function pfEditor() {
+  const d = pfDraft, th = themeOf(d.color);
+  const lg = (t, label) => `<button type="button" class="lg${d.logo.t === t ? " on" : ""}" data-pf-logo="${t}" aria-label="${label}" aria-pressed="${d.logo.t === t}"><span class="plg" style="background:${th.hdr}">${logoHTML({name:d.name, logo:{t, img:d.logo.img}})}</span></button>`;
+  $("modal-body").innerHTML = `<h3 id="modal-t">${d.id ? "Профиль" : "Новый профиль"}</h3>
+    <div class="pf-prev" style="background:${th.paper}"><div class="pf-hdr" style="background:${th.hdr}"><span class="plg" id="pf-prevlogo">${logoHTML({name:d.name, logo:d.logo})}</span><b id="pf-prevname">${esc(d.name || "Имя")}</b></div><div class="pf-btn" style="background:${th.accent};color:${th.ink}">Так будут выглядеть кнопки</div></div>
+    <label for="pf-name">Имя</label><input type="text" id="pf-name" maxlength="20" value="${esc(d.name)}" placeholder="например: Сын">
+    <label>Цвет</label><div class="swatches" role="group" aria-label="Цвет">${COLORS.map(([n, c], i) => `<button type="button" class="sw${sameColor(c, d.color) ? " on" : ""}" data-pf-color="${i}" aria-label="${n}" aria-pressed="${sameColor(c, d.color)}" style="background:${themeOf(c).accent}"></button>`).join("")}<label class="sw custom" title="Свой цвет"><input type="color" id="pf-custom" value="${themeOf(d.color).accent}" aria-label="Свой цвет">＋</label></div>
+    <label>Логотип</label><div class="logos" role="group" aria-label="Логотип">${LOGOS.map(t => lg(t, t)).join("")}${lg("letter", "Первая буква имени")}${d.logo.img ? lg("img", "Своё фото") : ""}<button type="button" class="lg" data-pf="photo" aria-label="Загрузить своё фото"><span class="plg" style="background:${th.hdr};color:#fff;font-size:12px;text-align:center;line-height:1.1">Своё фото</span></button></div>
+    <input type="file" id="pf-file" accept="image/*" hidden>
+
+    <button class="btn primary" type="button" data-pf="save">Сохранить</button>
+    <button class="btn" type="button" data-pf="cancel">Отмена</button>
+    ${d.id && d.id !== "main" ? '<button class="btn danger" type="button" data-pf="delete">Удалить профиль и его данные</button>' : ""}`;
+  $("modal").classList.add("show");
+}
+function hexToColor(hex) {
+  const r = parseInt(hex.slice(1, 3), 16) / 255, g = parseInt(hex.slice(3, 5), 16) / 255, b = parseInt(hex.slice(5, 7), 16) / 255;
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn, l = (mx + mn) / 2, sat = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
+  let h = 0; if (d) { h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h = Math.round(h * 60); if (h < 0) h += 360; }
+  return sat < 0.12 ? {h:h || 220, g:1} : {h};
+}
+function pfSave() {
+  const d = pfDraft, name = d.name.trim().slice(0, 20);
+  if (!name) { toast("Введите имя профиля"); return; }
+  const prof = {id:d.id || "u" + Date.now().toString(36), name, noLegs:d.id ? !!(PROF.list.find(x => x.id === d.id) || {}).noLegs : true, color:d.color, theme:themeOf(d.color), logo:d.logo.t === "img" ? {t:"img", img:d.logo.img} : {t:d.logo.t}};
+  if (d.id) { const i = PROF.list.findIndex(x => x.id === d.id); prof.key = PROF.list[i].key; PROF.list[i] = prof; }
+  else { prof.key = "legs-tracker-" + prof.id; PROF.list.push(prof); PROF.cur = prof.id; }
+  saveProfiles(); location.reload();
+}
+$("modal-body").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.pfSwitch !== undefined) { if (b.dataset.pfSwitch === CUR.id) { closeModal(); return; } PROF.cur = b.dataset.pfSwitch; saveProfiles(); location.reload(); return; }
+  if (b.dataset.pfColor !== undefined) { pfDraft.color = Object.assign({}, COLORS[+b.dataset.pfColor][1]); pfEditor(); return; }
+  if (b.dataset.pfLogo !== undefined) { pfDraft.logo = {t:b.dataset.pfLogo, img:pfDraft.logo.img}; pfEditor(); return; }
+  const a = b.dataset.pf; if (!a) return;
+  if (a === "new") { pfDraft = {id:null, name:"", color:{h:330}, logo:{t:"bunny"}}; pfEditor(); }
+  else if (a === "edit") { pfDraft = {id:CUR.id, name:CUR.name, color:Object.assign({}, CUR.color), logo:Object.assign({}, CUR.logo)}; pfEditor(); }
+  else if (a === "close" || a === "cancel") closeModal();
+  else if (a === "photo") $("pf-file").click();
+  else if (a === "save") pfSave();
+  else if (a === "delete") {
+    if (!confirm("Удалить профиль «" + pfDraft.name + "» и все его данные? Это нельзя отменить.")) return;
+    const i = PROF.list.findIndex(x => x.id === pfDraft.id); if (i < 0) return;
+    try { localStorage.removeItem(PROF.list[i].key); } catch (e) {}
+    PROF.list.splice(i, 1); if (PROF.cur === pfDraft.id) PROF.cur = "main"; saveProfiles(); location.reload();
+  }
+});
+$("modal-body").addEventListener("input", e => {
+  if (e.target.id !== "pf-name" || !pfDraft) return;
+  pfDraft.name = e.target.value;
+  $("pf-prevname").textContent = pfDraft.name || "Имя";
+  $("pf-prevlogo").innerHTML = logoHTML({name:pfDraft.name, logo:pfDraft.logo});
+  const lt = $("modal-body").querySelector('[data-pf-logo="letter"] .plg'); if (lt) lt.innerHTML = logoHTML({name:pfDraft.name, logo:{t:"letter"}});
+});
+$("modal-body").addEventListener("change", e => {
+  if (!pfDraft) return;
+  if (e.target.id === "pf-custom") { pfDraft.color = hexToColor(e.target.value); pfEditor(); return; }
+  if (e.target.id === "pf-file") {
+    const f = e.target.files[0]; if (!f) return;
+    const img = new Image(), url = URL.createObjectURL(f);
+    img.onload = () => {
+      const c = document.createElement("canvas"); c.width = c.height = 128; const x = c.getContext("2d"), m = Math.min(img.width, img.height);
+      x.drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, 128, 128);
+      URL.revokeObjectURL(url); pfDraft.logo = {t:"img", img:c.toDataURL("image/jpeg", 0.82)}; pfEditor();
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); toast("Не удалось открыть картинку"); };
+    img.src = url;
+  }
+});
+document.addEventListener("click", e => { if (e.target.closest(".prof-open")) pfMenu(); });
 
 const ABS_BLK = "Пресс";
 const ABS_DEF = [
@@ -367,6 +520,7 @@ function fixAbs(o) {
   if (!Array.isArray(o.blocks)) o.blocks = ["Растяжка", "Пресс", "Спина", "Стопы"];
   o.blocks = Array.from(new Set(o.blocks.map(b => String(b).trim().slice(0, 40)).filter(Boolean)));
   if (!o.pabs || typeof o.pabs !== "object" || Array.isArray(o.pabs)) o.pabs = {};
+  if (o.legsCfg && !(typeof o.legsCfg.start === "string" && /^\d{4}-\d{2}-\d{2}$/.test(o.legsCfg.start) && Array.isArray(o.legsCfg.days) && o.legsCfg.days.length)) delete o.legsCfg;
   migrateAbs(o);
   if (!Array.isArray(o.progs)) o.progs = [];
   o.progs = o.progs.filter(p => p && typeof p.id === "string" && typeof p.name === "string" && /^\d{4}-\d{2}-\d{2}$/.test(p.start) && p.weeks >= 1 && Array.isArray(p.days) && p.days.length && Array.isArray(p.ex) && p.ex.length && Array.isArray(p.vol) && Array.isArray(p.rest));
@@ -421,9 +575,12 @@ function load() {
 }
 function save() { try { localStorage.setItem(K, JSON.stringify(S)); } catch (e) { toast("Не удалось сохранить данные"); } }
 
-const LEGS = {id:"legs", name:"Комплекс для ног", start:"2026-11-10", weeks:15, days:[2, 3, 5, 6], rest:[13], builtin:true, ex:EX.map(n => ({n, u:"раз"}))};
-const progs = () => [LEGS].concat(S.progs);
-const curP = () => progs().find(x => x.id === S.cur) || LEGS;
+const LEGS = {id:"legs", name:"Комплекс для ног", weeks:15, rest:[13], builtin:true, ex:EX.map(n => ({n, u:"раз"})),
+  get start() { return (S.legsCfg && S.legsCfg.start) || "2026-11-10"; },
+  get days() { return (S.legsCfg && S.legsCfg.days) || [2, 3, 5, 6]; }};
+const progs = () => (CUR.noLegs ? [] : [LEGS]).concat(S.progs);
+const NONE = {id:"none", name:"Нет комплексов", start:"2026-01-05", weeks:1, days:[1], rest:[], ex:[], vol:[[]], none:true};
+const curP = () => progs().find(x => x.id === S.cur) || progs()[0] || NONE;
 const WDC = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
 const pRest = (p, w) => p.rest.indexOf(w) >= 0;
 function pVol(p, w, e) {
@@ -454,18 +611,28 @@ function initialSel(p) {
   return {w, d};
 }
 let sel = initialSel(curP());
-let trMode = "view", draft = null, edW = 1;
+let trMode = "view", draft = null, edW = 1, legsDraft = null;
 
 /* ---------- Тренировки ---------- */
 function renderTrain() {
   const p = curP();
+  if (p.none) {
+    $("pr-sel").innerHTML = `<option>Нет комплексов</option>`; $("pr-edit").hidden = true; $("total").textContent = "";
+    $("strip").hidden = true; $("wk-head").hidden = true;
+    if (trMode === "new") { $("wk-body").innerHTML = newForm(); return; }
+    if (trMode === "legs") { $("wk-body").innerHTML = legsForm(); return; }
+    trMode = "view";
+    $("wk-body").innerHTML = `<div class="restcard"><b>Комплексов пока нет</b>Нажмите «＋», чтобы создать комплекс тренировок на любой срок.</div>`;
+    return;
+  }
   if (sel.w > p.weeks) sel = initialSel(p);
   $("pr-sel").innerHTML = progs().map(x => `<option value="${esc(x.id)}"${x.id === p.id ? " selected" : ""}>${esc(x.name)}</option>`).join("");
-  $("pr-edit").hidden = !!p.builtin;
+  $("pr-edit").hidden = false;
   $("total").innerHTML = "подходов <b class='num'>" + progDone(p) + "</b> из " + progTotal(p);
   const view = trMode === "view";
   $("strip").hidden = !view; $("wk-head").hidden = !view;
   if (trMode === "new") { $("wk-body").innerHTML = newForm(); return; }
+  if (trMode === "legs") { $("wk-body").innerHTML = legsForm(); return; }
   if (trMode === "edit" && !p.builtin) { $("wk-body").innerHTML = editForm(p); return; }
   trMode = "view"; $("strip").hidden = false; $("wk-head").hidden = false;
 
@@ -524,7 +691,7 @@ function exDraftCard(x, i) {
 }
 function newForm() {
   const d = draft;
-  return `<form class="card" id="pr-form" novalidate><h3>Новый комплекс</h3>
+  return (CUR.noLegs ? `<div class="card"><h3>Готовый комплекс</h3><p class="note" style="margin-top:0">Программа ног на 15 недель с неделей отдыха. Дни тренировок и дату начала вы выберете сами.</p><button class="btn primary" type="button" id="pr-legs">Добавить «Комплекс для ног»</button></div>` : "") + `<form class="card" id="pr-form" novalidate><h3>Новый комплекс</h3>
     <label for="d-name">Название</label><input type="text" id="d-name" value="${esc(d.name)}" maxlength="50" placeholder="например: Пресс на 8 недель">
     <div class="ed-row" style="grid-template-columns:1fr 1fr"><div><label for="d-start">Дата начала</label><input type="date" id="d-start" value="${esc(d.start)}"></div>
     <div><label for="d-weeks">Недель (1–52)</label><input type="number" id="d-weeks" inputmode="numeric" min="1" max="52" value="${esc(d.weeks)}"></div></div>
@@ -561,6 +728,28 @@ function createProg() {
   toast("Комплекс создан");
 }
 
+/* --- готовый комплекс для ног: вопрос про дни и дата начала --- */
+function legsForm() {
+  const d = legsDraft, n = d.days.length;
+  return `<div class="card"><h3>Комплекс для ног</h3>
+    <p class="note" style="margin-top:0">В какие дни недели вы будете тренироваться? Программа рассчитана на 4 тренировки в неделю, но можно выбрать другое число дней.</p>
+    <div class="dchips" role="group" aria-label="Дни тренировок">${WDORDER.map(w => `<button type="button" class="daychip" data-lwd="${w}" aria-pressed="${d.days.indexOf(w) >= 0}">${WDC[w]}</button>`).join("")}</div>
+    <label for="lg-start">Дата начала</label><input type="date" id="lg-start" value="${esc(d.start)}">
+    <p class="note">Расписание на 15 недель считается от этой даты, 13-я неделя отдыха. В каждый выбранный день объём одинаковый.</p>
+    <div class="actions"><button class="btn primary wide" type="button" id="lg-ok">${d.adding ? "Добавить комплекс" : "Применить"}</button><button class="btn wide" type="button" id="lg-cancel">Отмена</button></div>
+    ${d.adding ? "" : `<div class="actions"><button class="btn danger wide" type="button" id="lg-del">Убрать комплекс из профиля</button></div>`}</div>`;
+}
+function legsApply() {
+  const d = legsDraft;
+  if (!d.days.length) { toast("Выберите хотя бы один день недели"); return; }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d.start)) { toast("Укажите дату начала"); return; }
+  if (!d.adding && d.days.length !== LEGS.days.length && Object.keys(S.done).some(k => k.indexOf(":") < 0) && !confirm("Число тренировочных дней изменилось, часть прежних отметок может не отобразиться. Продолжить?")) return;
+  if (d.adding) { CUR.noLegs = false; saveProfiles(); }
+  S.legsCfg = {start:d.start, days:d.days.slice()}; S.cur = "legs"; save();
+  trMode = "view"; legsDraft = null; sel = initialSel(LEGS); renderTrain(); window.scrollTo(0, 0);
+  toast(d.adding ? "Комплекс добавлен" : "Расписание обновлено");
+}
+
 /* --- настройка комплекса --- */
 function editForm(p) {
   if (edW > p.weeks) edW = 1;
@@ -583,15 +772,34 @@ function editForm(p) {
 /* --- обработчики --- */
 $("pr-sel").addEventListener("change", () => { S.cur = $("pr-sel").value; save(); trMode = "view"; sel = initialSel(curP()); renderTrain(); });
 $("pr-new").addEventListener("click", () => { trMode = "new"; draft = newDraft(); renderTrain(); window.scrollTo(0, 0); });
-$("pr-edit").addEventListener("click", () => { trMode = "edit"; edW = 1; renderTrain(); window.scrollTo(0, 0); });
+$("pr-edit").addEventListener("click", () => {
+  const p = curP();
+  if (p.builtin) { trMode = "legs"; legsDraft = {start:LEGS.start, days:LEGS.days.slice(), adding:false}; }
+  else { trMode = "edit"; edW = 1; }
+  renderTrain(); window.scrollTo(0, 0);
+});
 $("strip").addEventListener("click", e => {
   const b = e.target.closest(".chip"); if (!b) return;
   sel.w = +b.dataset.w; renderTrain();
 });
 $("wk-body").addEventListener("click", e => {
   const p = curP(), t = e.target.closest("button, [data-d]");
+  if (trMode === "legs") {
+    if (!t) return;
+    if (t.dataset.lwd !== undefined) { const wd = +t.dataset.lwd, i = legsDraft.days.indexOf(wd); if (i >= 0) legsDraft.days.splice(i, 1); else legsDraft.days.push(wd); t.setAttribute("aria-pressed", i < 0); return; }
+    if (t.id === "lg-ok") { legsApply(); return; }
+    if (t.id === "lg-cancel") { trMode = "view"; legsDraft = null; renderTrain(); return; }
+    if (t.id === "lg-del") {
+      if (!confirm("Убрать «Комплекс для ног» из профиля вместе с отметками?")) return;
+      CUR.noLegs = true; saveProfiles(); delete S.legsCfg;
+      Object.keys(S.done).forEach(k => { if (k.indexOf(":") < 0) delete S.done[k]; });
+      S.cur = S.progs.length ? S.progs[0].id : "legs"; save(); trMode = "view"; legsDraft = null; sel = initialSel(curP()); renderTrain(); toast("Комплекс убран");
+    }
+    return;
+  }
   if (trMode === "new") {
     if (!t) return;
+    if (t.id === "pr-legs") { trMode = "legs"; legsDraft = {start:iso(new Date()), days:[2, 3, 5, 6], adding:true}; renderTrain(); window.scrollTo(0, 0); return; }
     if (t.dataset.wd !== undefined) { const wd = +t.dataset.wd, i = draft.days.indexOf(wd); if (i >= 0) draft.days.splice(i, 1); else draft.days.push(wd); t.setAttribute("aria-pressed", i < 0); return; }
     if (t.id === "pr-addex") { draft.ex.push({n:"", s:"3", r:"10", u:"раз", dr:"0", dsn:"0"}); renderTrain(); return; }
     if (t.dataset.xdel !== undefined) { draft.ex.splice(+t.dataset.xdel, 1); renderTrain(); return; }
@@ -640,6 +848,7 @@ $("wk-body").addEventListener("click", e => {
 });
 $("wk-body").addEventListener("input", e => {
   const el = e.target;
+  if (trMode === "legs" && legsDraft && el.id === "lg-start") { legsDraft.start = el.value; return; }
   if (trMode === "new" && draft) {
     if (el.id === "d-name") draft.name = el.value; else if (el.id === "d-start") draft.start = el.value;
     else if (el.id === "d-weeks") draft.weeks = el.value; else if (el.id === "d-rest") draft.restTxt = el.value;
@@ -713,7 +922,7 @@ function spark(v) {
   const W = 300, H = 30, p = 3, mn = Math.min(...v), mx = Math.max(...v), rg = mx - mn || 1;
   const pts = v.map((y, i) => (p + i * (W - 2 * p) / (v.length - 1)).toFixed(1) + "," + (H - p - (y - mn) / rg * (H - 2 * p)).toFixed(1));
   const l = pts[pts.length - 1].split(",");
-  return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="30" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts.join(" ")}" fill="none" stroke="#A02C5C" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>`;
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="30" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts.join(" ")}" fill="none" stroke="${PAL.blue}" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>`;
 }
 
 $("f-date").value = iso(new Date());
@@ -756,7 +965,7 @@ $("file").addEventListener("change", () => {
       const o = JSON.parse(rd.result);
       if (!o || typeof o.done !== "object" || !Array.isArray(o.rec)) throw 0;
       if (!confirm("Заменить текущие данные данными из копии?")) return;
-      S = {done:o.done, rec:o.rec, abs:o.abs, lib:o.lib, plan:o.plan, pdone:o.pdone, pid:o.pid, imp:o.imp, progs:o.progs, cur:o.cur, goals:o.goals, rv:o.rv, body:o.body, media:o.media, blocks:o.blocks, pabs:o.pabs}; fixAbs(S); migrate(); save(); renderTrain(); renderRec(); renderAbs(); renderPlan(); toast("Данные загружены");
+      S = {done:o.done, rec:o.rec, abs:o.abs, lib:o.lib, plan:o.plan, pdone:o.pdone, pid:o.pid, imp:o.imp, progs:o.progs, cur:o.cur, goals:o.goals, rv:o.rv, body:o.body, media:o.media, blocks:o.blocks, pabs:o.pabs, legsCfg:o.legsCfg}; fixAbs(S); migrate(); save(); renderTrain(); renderRec(); renderAbs(); renderPlan(); toast("Данные загружены");
     } catch (e) { toast("Файл не подходит"); }
   };
   rd.readAsText(f); $("file").value = "";
@@ -859,7 +1068,7 @@ function renderAbs() {
 
   let h = "";
   if (absEdit) {
-    h += `<p class="note" style="color:#EBD0DC;margin:0 0 10px">Упражнения этой страницы это блок «Пресс» справочника: изменения видны и там.</p><div class="ed">`;
+    h += `<p class="note" style="color:var(--soft);margin:0 0 10px">Упражнения этой страницы это блок «Пресс» справочника: изменения видны и там.</p><div class="ed">`;
     absList().forEach(x => {
       h += `<div class="card"><div class="ed-top"><div><label for="n${x.id}">Название</label><input type="text" id="n${x.id}" value="${esc(x.n)}" data-id="${x.id}" data-f="n" maxlength="60"></div><button class="del" data-id="${x.id}" aria-label="Убрать из блока «Пресс»">✕</button></div>
         <div class="ed-row"><div><label>Подходов</label><input type="number" inputmode="numeric" min="1" max="20" value="${x.s}" data-id="${x.id}" data-f="s"></div>
@@ -1020,7 +1229,7 @@ function planBody() {
         <div><label>Единица</label><select data-id="${x.id}" data-f="u">${unitOpts(x.u)}</select></div></div>
         <label>Блок</label><input type="text" list="blocks" maxlength="40" value="${esc(x.blk || "")}" placeholder="без блока" data-id="${x.id}" data-f="blk"></div>`;
     });
-    return h + `</div><p class="note" style="color:#EBD0DC">Блоки комплексов (например, «Комплекс для ног») берутся из вкладки «Тренировки» и здесь не меняются.</p><div class="actions"><button class="btn primary wide" id="pl-editdone">Готово</button></div>`;
+    return h + `</div><p class="note" style="color:var(--soft)">Блоки комплексов (например, «Комплекс для ног») берутся из вкладки «Тренировки» и здесь не меняются.</p><div class="actions"><button class="btn primary wide" id="pl-editdone">Готово</button></div>`;
   }
   let h = `<div class="daterow"><button id="pl-prev" aria-label="Предыдущий день">‹</button><input type="date" id="pl-date" value="${pDate}" aria-label="Дата"><button id="pl-next" aria-label="Следующий день">›</button></div>`;
   const A = autoFor(pDate);
@@ -1512,7 +1721,7 @@ function renderChart() {
   });
   if (n > 1) {
     g += `<line x1="${L}" x2="${W - R}" y1="${Y(dmx).toFixed(1)}" y2="${Y(dmx).toFixed(1)}" stroke="#E0A100" stroke-width="1.5" stroke-dasharray="5 4"/>`;
-    g += `<polyline points="${pts.map((p, i) => X(i).toFixed(1) + "," + Y(p.q).toFixed(1)).join(" ")}" fill="none" stroke="#A02C5C" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
+    g += `<polyline points="${pts.map((p, i) => X(i).toFixed(1) + "," + Y(p.q).toFixed(1)).join(" ")}" fill="none" stroke="${PAL.blue}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
   }
   if (goal) {
     const gy = Y(goal).toFixed(1);
@@ -1520,7 +1729,7 @@ function renderChart() {
   }
   pts.forEach((p, i) => {
     const cx = X(i).toFixed(1), cy = Y(p.q).toFixed(1), sel = i === chSel;
-    g += `<circle cx="${cx}" cy="${cy}" r="${sel ? 7 : 4.5}" fill="${p.rc ? "#E0A100" : "#A02C5C"}" stroke="${sel ? "#2B1020" : "#fff"}" stroke-width="${sel ? 2.5 : 2}"/><circle cx="${cx}" cy="${cy}" r="17" fill="transparent" data-i="${i}"/>`;
+    g += `<circle cx="${cx}" cy="${cy}" r="${sel ? 7 : 4.5}" fill="${p.rc ? "#E0A100" : PAL.blue}" stroke="${sel ? PAL.ink : "#fff"}" stroke-width="${sel ? 2.5 : 2}"/><circle cx="${cx}" cy="${cy}" r="17" fill="transparent" data-i="${i}"/>`;
   });
   $("ch-box").innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="График: ${esc(x.n)}, точек ${n}, от ${fnum(dmn)} до ${fnum(dmx)} ${esc(ru)}${goal ? ", цель " + fnum(goal) : ""}">${g}</svg>`;
 
@@ -1556,10 +1765,10 @@ function seriesChart(pts, unit, sel, band) {
     const a = i === 0 && n > 1 ? "start" : (i === n - 1 && n > 1 ? "end" : "middle");
     g += `<text x="${X(i).toFixed(1)}" y="${H - 8}" text-anchor="${a}" font-size="12" fill="#5B6B7F">${pts[i].d.slice(8)}.${pts[i].d.slice(5, 7)}</text>`;
   });
-  if (n > 1) g += `<polyline points="${pts.map((p, i) => X(i).toFixed(1) + "," + Y(p.q).toFixed(1)).join(" ")}" fill="none" stroke="#A02C5C" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
+  if (n > 1) g += `<polyline points="${pts.map((p, i) => X(i).toFixed(1) + "," + Y(p.q).toFixed(1)).join(" ")}" fill="none" stroke="${PAL.blue}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
   pts.forEach((p, i) => {
     const cx = X(i).toFixed(1), cy = Y(p.q).toFixed(1), on = i === sel;
-    g += `<circle cx="${cx}" cy="${cy}" r="${on ? 7 : 4.5}" fill="#A02C5C" stroke="${on ? "#2B1020" : "#fff"}" stroke-width="${on ? 2.5 : 2}"/><circle cx="${cx}" cy="${cy}" r="17" fill="transparent" data-i="${i}"/>`;
+    g += `<circle cx="${cx}" cy="${cy}" r="${on ? 7 : 4.5}" fill="${PAL.blue}" stroke="${on ? PAL.ink : "#fff"}" stroke-width="${on ? 2.5 : 2}"/><circle cx="${cx}" cy="${cy}" r="17" fill="transparent" data-i="${i}"/>`;
   });
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="График: точек ${n}, от ${fnum(mn)} до ${fnum(mx)} ${esc(unit)}">${g}</svg>`;
 }
@@ -1748,7 +1957,7 @@ document.querySelectorAll("nav button").forEach(b => b.addEventListener("click",
   if (t === "rec") renderRec(); else if (t === "abs") { absEdit = false; absDate = iso(new Date()); renderAbs(); } else if (t === "body") { bSel = null; renderBody(); } else if (t === "media") { mEdit = null; mTypeAuto = true; mType = "link"; renderMedia(); } else if (t === "plan") { pMode = "view"; pDate = iso(new Date()); libEdit = null; renderPlan(); } else renderTrain();
 }));
 
-renderTrain(); renderRec(); renderAbs(); renderPlan(); readIncoming();
+renderProfileUI(); renderTrain(); renderRec(); renderAbs(); renderPlan(); readIncoming();
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist();
 if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
 </script>
