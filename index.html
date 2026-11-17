@@ -146,6 +146,28 @@ nav button[aria-current=page]{color:var(--blue)}
 .mact{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
 .mact .btn,.mact a.btn{min-height:40px;padding:0 12px;font-size:14px;display:inline-flex;align-items:center;text-decoration:none;color:var(--ink)}
 .rx-sep{border-top:1px solid var(--line);margin:16px 0 4px}
+.gbtn{margin-left:auto;flex:0 0 auto;display:flex;align-items:center;gap:6px;min-height:44px;padding:0 12px;border-radius:22px;border:1.5px solid var(--chipb);background:rgba(255,255,255,.08);color:#fff;font-weight:700;font-size:14px;font-variant-numeric:tabular-nums}
+.gbtn svg{width:20px;height:20px}
+.gm-head{display:flex;align-items:center;gap:12px}
+.gback{width:44px;height:44px;border-radius:12px;border:1.5px solid var(--chipb);background:rgba(255,255,255,.08);color:#fff;font-size:28px;line-height:1}
+.puz{width:100%;border-radius:12px;display:block;background:#1b1b1b}
+.gmcap{margin:10px 0 0;font-size:15px}
+.gmcap b{font-size:18px}
+.gday{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:6px}
+.gday div{border-radius:10px;padding:6px 0;text-align:center;font-size:12px;background:#F3E8EE;line-height:1.3}
+.gday b{display:block;font-size:15px}
+.gday .ok{background:#DDF3E8;color:#14573A}
+.gday .missed{background:#FBE0E0;color:#8B1A1A}
+.gday .today{outline:2px solid var(--blue)}
+.gday .none{opacity:.55}
+.gsrc{list-style:none;margin:8px 0 0;padding:0}
+.gsrc li{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:15px}
+.gsrc li:first-child{border-top:0}
+.gsrc .yes{color:#14573A;font-weight:700}
+.coll{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:8px}
+.coll figure{margin:0}
+.coll img{width:100%;border-radius:10px;display:block;background:#EBDDE4;aspect-ratio:3/2;object-fit:cover}
+.coll figcaption{font-size:13px;margin-top:4px;color:var(--mute)}
 .logo{flex:0 0 auto;width:50px;height:54px;padding:0;border:0;background:none;display:grid;place-items:center;border-radius:14px}
 .logo svg{width:44px;height:51px}
 .logo img{width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid var(--soft)}
@@ -357,6 +379,13 @@ input[readonly]{background:#F2F5F8;font-size:13px}
   <main id="m-main"></main>
 </section>
 
+<section id="v-game" class="view" hidden>
+  <header class="top">
+    <div class="gm-head"><button type="button" class="gback" id="gm-back" aria-label="Назад">‹</button><div><h1>Пазл недели</h1><div class="total num" id="gm-sub"></div></div></div>
+  </header>
+  <main><div id="gm-body"></div><input type="file" id="gm-file" accept="image/*" hidden></main>
+</section>
+
 <nav>
   <button data-tab="train" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4M9 15l2 2 4-4"/></svg>Тренировки</button>
   <button data-tab="rec"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5M4 19h16M8 15l4-5 3 3 5-7"/></svg>Рекорды</button>
@@ -521,6 +550,10 @@ function fixAbs(o) {
   o.blocks = Array.from(new Set(o.blocks.map(b => String(b).trim().slice(0, 40)).filter(Boolean)));
   if (!o.pabs || typeof o.pabs !== "object" || Array.isArray(o.pabs)) o.pabs = {};
   if (o.legsCfg && !(typeof o.legsCfg.start === "string" && /^\d{4}-\d{2}-\d{2}$/.test(o.legsCfg.start) && Array.isArray(o.legsCfg.days) && o.legsCfg.days.length)) delete o.legsCfg;
+  if (!o.game || typeof o.game !== "object" || Array.isArray(o.game)) o.game = {};
+  ["cd", "wk", "ex"].forEach(k => { if (!o.game[k] || typeof o.game[k] !== "object" || Array.isArray(o.game[k])) o.game[k] = {}; });
+  ["coll", "custom"].forEach(k => { if (!Array.isArray(o.game[k])) o.game[k] = []; });
+  o.game.init = !!o.game.init;
   migrateAbs(o);
   if (!Array.isArray(o.progs)) o.progs = [];
   o.progs = o.progs.filter(p => p && typeof p.id === "string" && typeof p.name === "string" && /^\d{4}-\d{2}-\d{2}$/.test(p.start) && p.weeks >= 1 && Array.isArray(p.days) && p.days.length && Array.isArray(p.ex) && p.ex.length && Array.isArray(p.vol) && Array.isArray(p.rest));
@@ -573,7 +606,11 @@ function load() {
   try { const o = JSON.parse(localStorage.getItem(K)); if (o && o.done && Array.isArray(o.rec)) { fixAbs(o); return o; } } catch (e) {}
   const o = {done:{}, rec:[]}; fixAbs(o); return o;
 }
-function save() { try { localStorage.setItem(K, JSON.stringify(S)); } catch (e) { toast("Не удалось сохранить данные"); } }
+function save() {
+  try { gameSweep(); } catch (e) {}
+  try { localStorage.setItem(K, JSON.stringify(S)); } catch (e) { toast("Не удалось сохранить данные"); }
+  try { updateGameBadge(); } catch (e) {}
+}
 
 const LEGS = {id:"legs", name:"Комплекс для ног", weeks:15, rest:[13], builtin:true, ex:EX.map(n => ({n, u:"раз"})),
   get start() { return (S.legsCfg && S.legsCfg.start) || "2026-11-10"; },
@@ -965,7 +1002,7 @@ $("file").addEventListener("change", () => {
       const o = JSON.parse(rd.result);
       if (!o || typeof o.done !== "object" || !Array.isArray(o.rec)) throw 0;
       if (!confirm("Заменить текущие данные данными из копии?")) return;
-      S = {done:o.done, rec:o.rec, abs:o.abs, lib:o.lib, plan:o.plan, pdone:o.pdone, pid:o.pid, imp:o.imp, progs:o.progs, cur:o.cur, goals:o.goals, rv:o.rv, body:o.body, media:o.media, blocks:o.blocks, pabs:o.pabs, legsCfg:o.legsCfg}; fixAbs(S); migrate(); save(); renderTrain(); renderRec(); renderAbs(); renderPlan(); toast("Данные загружены");
+      S = {done:o.done, rec:o.rec, abs:o.abs, lib:o.lib, plan:o.plan, pdone:o.pdone, pid:o.pid, imp:o.imp, progs:o.progs, cur:o.cur, goals:o.goals, rv:o.rv, body:o.body, media:o.media, blocks:o.blocks, pabs:o.pabs, legsCfg:o.legsCfg, game:o.game}; fixAbs(S); migrate(); save(); renderTrain(); renderRec(); renderAbs(); renderPlan(); toast("Данные загружены");
     } catch (e) { toast("Файл не подходит"); }
   };
   rd.readAsText(f); $("file").value = "";
@@ -1945,11 +1982,251 @@ $("m-main").addEventListener("submit", e => {
 });
 $("m-main").addEventListener("error", e => { if (e.target.tagName === "IMG") { const box = e.target.parentNode; e.target.remove(); box.textContent = ""; } }, true);
 
+/* ---------- Пазл недели ---------- */
+const PAINTINGS = [
+  {id:"shishkin-pine", t:"Утро в сосновом лесу", a:"И. Шишкин, К. Савицкий", y:"1889", w:["en:Morning in a Pine Forest", "ru:Утро в сосновом лесу"]},
+  {id:"vasnetsov-bogatyrs", t:"Богатыри", a:"В. Васнецов", y:"1898", w:["en:Bogatyrs (painting)", "en:Three Bogatyrs", "ru:Богатыри (картина)"]},
+  {id:"savrasov-rooks", t:"Грачи прилетели", a:"А. Саврасов", y:"1871", w:["en:The Rooks Have Returned", "ru:Грачи прилетели"]},
+  {id:"serov-peaches", t:"Девочка с персиками", a:"В. Серов", y:"1887", w:["en:Girl with Peaches", "ru:Девочка с персиками"]},
+  {id:"vasnetsov-alyonushka", t:"Алёнушка", a:"В. Васнецов", y:"1881", w:["en:Alyonushka (painting)", "ru:Алёнушка (картина)"]},
+  {id:"vasnetsov-wolf", t:"Иван-царевич на Сером волке", a:"В. Васнецов", y:"1889", w:["en:Ivan Tsarevich Riding the Grey Wolf", "ru:Иван-царевич на Сером волке"]},
+  {id:"vrubel-demon", t:"Демон сидящий", a:"М. Врубель", y:"1890", w:["en:The Demon Seated", "ru:Демон сидящий"]},
+  {id:"petrov-horse", t:"Купание красного коня", a:"К. Петров-Водкин", y:"1912", w:["en:Bathing of a Red Horse", "ru:Купание красного коня"]},
+  {id:"levitan-autumn", t:"Золотая осень", a:"И. Левитан", y:"1895", w:["ru:Золотая осень (картина Левитана)", "en:Golden Autumn (Levitan)"]},
+  {id:"shishkin-rye", t:"Рожь", a:"И. Шишкин", y:"1878", w:["en:Rye (painting)", "ru:Рожь (картина)"]},
+  {id:"kuindzhi-birch", t:"Берёзовая роща", a:"А. Куинджи", y:"1879", w:["ru:Берёзовая роща (картина Куинджи)", "en:Birch Grove (Kuindzhi)"]},
+  {id:"surikov-morozova", t:"Боярыня Морозова", a:"В. Суриков", y:"1887", w:["en:Boyarynya Morozova", "ru:Боярыня Морозова"]},
+  {id:"ivanov-christ", t:"Явление Христа народу", a:"А. Иванов", y:"1857", w:["en:The Appearance of Christ Before the People", "ru:Явление Христа народу"]}
+];
+let gmPrevTab = "train", gmImg = null, gmColl = false, gmMsg = "", gmBusy = false;
+const allPaint = () => PAINTINGS.concat(S.game.custom.map(c => ({id:c.id, t:c.t || "Моё фото", a:"Моё фото", y:"", w:[], custom:true})));
+const hashStr = str => { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
+function rng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const weekMon = d => { const x = parseIso(d); x.setDate(x.getDate() - (x.getDay() + 6) % 7); return iso(x); };
+const weekDates = mon => Array.from({length:7}, (_, i) => shiftIso(mon, i));
+const dayDone = d => { const t = pTotal(d); return t > 0 && pDay(d) === t; };
+
+// отметка, в какой день план дня был выполнен впервые: за «вовремя» кусочек даётся, за позднее нет
+function gameSweep() {
+  const G = S.game, today = iso(new Date());
+  weekDates(weekMon(today)).forEach(d => {
+    if (!pTotal(d)) { delete G.cd[d]; return; }
+    if (dayDone(d)) { if (!G.cd[d]) G.cd[d] = G.init ? today : (d <= today ? d : today); } else delete G.cd[d];
+  });
+  G.init = true;
+  Object.keys(G.cd).forEach(k => { if (k < shiftIso(today, -70)) delete G.cd[k]; });
+}
+function dayItems(d) {
+  const out = [];
+  pList(d).forEach(x => out.push({n:x.n, s:x.s, r:x.r, u:x.u}));
+  autoFor(d).forEach(o => o.p.ex.forEach((x, i) => { const v = pVol(o.p, o.w, i); if (v[0] > 0) out.push({n:x.n, s:v[0], r:v[1], u:x.u}); }));
+  if (absOn(d)) absList().forEach(x => out.push({n:x.n, s:x.s, r:x.r, u:x.u}));
+  return out;
+}
+function calcN(mon) {
+  const D = weekDates(mon).filter(d => pTotal(d) > 0).length, Gc = trk().filter(x => S.goals[x.id]).length;
+  return Math.max(4, Math.min(20, D + Gc));
+}
+function pickPaint(mon) {
+  const done = S.game.coll.map(c => c.pid), pool = PAINTINGS.filter(q => done.indexOf(q.id) < 0), list = pool.length ? pool : PAINTINGS;
+  return list[hashStr(mon) % list.length].id;
+}
+function gameWeek(mon) {
+  const G = S.game; let w = G.wk[mon];
+  if (!w) w = G.wk[mon] = {pid:pickPaint(mon), n:calcN(mon), seed:hashStr("w" + mon)};
+  if (!w.lock && mon === weekMon(iso(new Date()))) w.n = calcN(mon);
+  return w;
+}
+function gameState(mon) {
+  const G = S.game, today = iso(new Date()), dates = weekDates(mon), sat = dates[5];
+  const st = {days:[], dayPieces:0, missed:[], extraPieces:0, goals:[], goalPieces:0, extraOpen: today >= sat && today <= dates[6], extras:[]};
+  dates.forEach(d => {
+    const t = pTotal(d), on = t > 0 && dayDone(d) && G.cd[d] && G.cd[d] <= d;
+    const state = !t ? "none" : on ? "ok" : d < today ? "missed" : d === today ? "today" : "future";
+    if (on) st.dayPieces++;
+    if (state === "missed") st.missed.push(d);
+    st.days.push({d, t, state});
+  });
+  st.missed.forEach(d => {
+    const items = dayItems(d); let all = items.length > 0;
+    items.forEach((it, i) => { for (let t = 0; t < it.s; t++) if (!G.ex[mon + "|" + d + "|" + i + "|" + t]) all = false; });
+    st.extras.push({d, items, done:all}); if (all) st.extraPieces++;
+  });
+  trk().forEach(x => {
+    const g = S.goals[x.id]; if (!g) return;
+    let best = 0; S.rec.forEach(r => { if (r.ex === x.id && r.date >= mon && r.date <= dates[6] && r.q > best) best = r.q; });
+    const ok = best > g * 0.6; st.goals.push({x, g, best, ok}); if (ok) st.goalPieces++;
+  });
+  st.earned = st.dayPieces + st.extraPieces + st.goalPieces;
+  return st;
+}
+function updateGameBadge() {
+  const mon = weekMon(iso(new Date())), w = gameWeek(mon), st = gameState(mon), e = Math.min(w.n, st.earned);
+  if (e > 0) w.lock = true;
+  document.querySelectorAll(".gb-t").forEach(el => { el.textContent = e + "/" + w.n; });
+}
+
+/* --- картинки: загрузка из Википедии, сжатие и хранение на телефоне --- */
+function idb() { return new Promise((res, rej) => { const r = indexedDB.open("legs-game", 1); r.onupgradeneeded = () => r.result.createObjectStore("img", {keyPath:"id"}); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
+async function idbGet(id) { try { const db = await idb(); return await new Promise(res => { const q = db.transaction("img").objectStore("img").get(id); q.onsuccess = () => res(q.result ? q.result.data : null); q.onerror = () => res(null); }); } catch (e) { return null; } }
+async function idbPut(id, data) { try { const db = await idb(); return await new Promise(res => { const tx = db.transaction("img", "readwrite"); tx.objectStore("img").put({id, data}); tx.oncomplete = () => res(true); tx.onerror = () => res(false); }); } catch (e) { return false; } }
+const fetchT = (url, ms, opt) => { const ac = new AbortController(), t = setTimeout(() => ac.abort(), ms); return fetch(url, Object.assign({signal:ac.signal}, opt || {})).finally(() => clearTimeout(t)); };
+function thumbUrl(src, width, want) {
+  if (!src || (width && width <= want)) return src;
+  const m = src.match(/^(https:\/\/upload\.wikimedia\.org\/wikipedia\/(?:commons|ru|en))\/([0-9a-f]\/[0-9a-f]{2})\/([^\/?#]+\.(?:jpe?g|png))$/i);
+  return m ? m[1] + "/thumb/" + m[2] + "/" + m[3] + "/" + want + "px-" + m[3] : src;
+}
+async function shrink(blob, max) {
+  const bmp = await createImageBitmap(blob), k = Math.min(1, max / Math.max(bmp.width, bmp.height)), c = document.createElement("canvas");
+  c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k); c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
+  return c.toDataURL("image/jpeg", 0.85);
+}
+const toImage = src => new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = src; });
+async function fetchPainting(q) {
+  for (const ref of q.w) {
+    const lang = ref.slice(0, 2), title = ref.slice(3);
+    try {
+      const r = await fetchT("https://" + lang + ".wikipedia.org/api/rest_v1/page/summary/" + encodeURIComponent(title.replace(/ /g, "_")), 12000);
+      if (!r.ok) continue;
+      const j = await r.json(), o = j.originalimage || j.thumbnail; if (!o || !o.source) continue;
+      const ir = await fetchT(thumbUrl(o.source, o.width, 960), 25000, {mode:"cors"}); if (!ir.ok) continue;
+      const data = await shrink(await ir.blob(), 1000); await idbPut(q.id, data); return data;
+    } catch (e) {}
+  }
+  throw new Error("load");
+}
+function makeFallback() {
+  const c = document.createElement("canvas"); c.width = 1000; c.height = 667; const x = c.getContext("2d"), g = x.createLinearGradient(0, 0, 0, 667);
+  g.addColorStop(0, "#f7c97b"); g.addColorStop(0.55, "#f3a683"); g.addColorStop(1, "#7a6fa3"); x.fillStyle = g; x.fillRect(0, 0, 1000, 667);
+  x.fillStyle = "rgba(255,244,214,.92)"; x.beginPath(); x.arc(720, 230, 70, 0, 7); x.fill();
+  [["#5b5f97", 430, 0.9], ["#44487f", 500, 1.3], ["#2f3263", 580, 1.7]].forEach(([col, y, f]) => { x.fillStyle = col; x.beginPath(); x.moveTo(0, 667); for (let i = 0; i <= 1000; i += 10) x.lineTo(i, y + Math.sin(i / 130 * f + f) * 38 + Math.sin(i / 57) * 10); x.lineTo(1000, 667); x.fill(); });
+  return c.toDataURL("image/jpeg", 0.85);
+}
+async function loadPaint(pid) {
+  if (gmImg && gmImg.pid === pid) return gmImg.img;
+  let data = await idbGet(pid);
+  if (!data) { const q = allPaint().find(v => v.id === pid); if (!q || !q.w.length) throw new Error("none"); data = await fetchPainting(q); }
+  const img = await toImage(data); gmImg = {pid, img}; return img;
+}
+// выбирает картину недели: если выбранная не загрузилась, пробует следующие; иначе запасная
+async function ensurePaint(w) {
+  gmMsg = "";
+  const list = allPaint(), start = Math.max(0, list.findIndex(v => v.id === w.pid));
+  for (let k = 0; k < Math.min(list.length, 4); k++) {
+    const q = list[(start + k) % list.length];
+    try { const im = await loadPaint(q.id); if (q.id !== w.pid) { w.pid = q.id; save(); } return im; } catch (e) {}
+  }
+  gmMsg = "Не удалось загрузить картины из интернета. Показана запасная картинка. Попробуйте позже или выберите своё фото.";
+  const im = await toImage(makeFallback()); gmImg = {pid:"fallback", img:im}; return im;
+}
+
+/* --- рисование пазла --- */
+function layout(n, ar) {
+  const R = Math.max(1, Math.round(Math.sqrt(n / ar))), base = Math.floor(n / R), ext = n % R, out = [];
+  for (let r = 0; r < R; r++) { const cnt = base + (r < ext ? 1 : 0); for (let c = 0; c < cnt; c++) out.push({x0:c / cnt, x1:(c + 1) / cnt, y0:r / R, y1:(r + 1) / R}); }
+  return out;
+}
+function drawPuzzle(cv, img, n, seed, earned) {
+  const W = cv.clientWidth || 340, H = Math.round(W * img.height / img.width), dpr = window.devicePixelRatio || 1;
+  cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + "px";
+  const x = cv.getContext("2d"); x.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const rects = layout(n, img.width / img.height), order = rects.map((_, i) => i), rnd = rng(seed);
+  for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
+  const open = new Set(order.slice(0, earned)), hdr = getComputedStyle(document.documentElement).getPropertyValue("--hdr").trim() || "#4A2237";
+  rects.forEach((r, i) => {
+    const px = r.x0 * W, py = r.y0 * H, pw = (r.x1 - r.x0) * W, ph = (r.y1 - r.y0) * H;
+    if (open.has(i)) x.drawImage(img, r.x0 * img.width, r.y0 * img.height, (r.x1 - r.x0) * img.width, (r.y1 - r.y0) * img.height, px, py, pw, ph);
+    else { x.fillStyle = hdr; x.fillRect(px, py, pw, ph); x.fillStyle = "rgba(255,255,255,.12)"; x.fillRect(px, py, pw, ph); x.fillStyle = "rgba(255,255,255,.45)"; x.font = "bold " + Math.round(Math.min(pw, ph) * 0.42) + "px sans-serif"; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText("?", px + pw / 2, py + ph / 2); }
+    x.strokeStyle = "rgba(0,0,0,.35)"; x.lineWidth = 2; x.strokeRect(px + 1, py + 1, pw - 2, ph - 2);
+  });
+}
+
+/* --- экран игры --- */
+const DNS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
+async function renderGame() {
+  if (gmBusy) return; gmBusy = true;
+  try {
+    const today = iso(new Date()), mon = weekMon(today), w = gameWeek(mon), st = gameState(mon), earned = Math.min(w.n, st.earned), done = earned >= w.n;
+    $("gm-sub").textContent = fmt(parseIso(mon)) + " – " + fmt(parseIso(shiftIso(mon, 6))) + ", кусочков " + earned + " из " + w.n;
+    if (earned > 0) w.lock = true;
+    if (done && !S.game.coll.some(c => c.wk === mon)) { S.game.coll.push({wk:mon, pid:w.pid}); }
+    if (gmColl) { await renderColl(); return; }
+    const q = allPaint().find(v => v.id === w.pid) || PAINTINGS[0];
+    let h = `<div class="card"><canvas class="puz" id="gm-cv" role="img" aria-label="Пазл: открыто кусочков ${earned} из ${w.n}"></canvas><div class="gmcap" id="gm-cap">Загружаю картину…</div></div>`;
+    h += `<div class="card"><h3>Как получить кусочки</h3>
+      <p class="note" style="margin-top:0">Каждую неделю новая картина Третьяковской галереи. +1 кусочек за день, когда план выполнен в этот же день. +1 за каждую цель, достигнутую больше чем на 60% на этой неделе. В субботу и воскресенье пропущенные дни можно наверстать дополнительными упражнениями.</p>
+      <div class="gday">${st.days.map((d, i) => `<div class="${d.state}${d.d === today ? " today" : ""}" title="${isoRu(d.d)}">${DNS[i]}<b>${d.state === "ok" ? "✓" : d.state === "missed" ? "✕" : d.state === "none" ? "·" : "•"}</b></div>`).join("")}</div>
+      <ul class="gsrc"><li><span>План по дням</span><span class="${st.dayPieces ? "yes" : ""}">${st.dayPieces} из ${st.days.filter(d => d.t).length}</span></li>
+      ${st.goals.length ? st.goals.map(g => `<li><span>Цель: ${esc(g.x.n)}</span><span class="${g.ok ? "yes" : ""}">${g.ok ? "✓ " : ""}${Math.round(g.best / g.g * 100)}%</span></li>`).join("") : `<li><span>Цели</span><span>не заданы (вкладка «Рекорды»)</span></li>`}
+      <li><span>Доп. упражнения</span><span class="${st.extraPieces ? "yes" : ""}">${st.extraPieces}</span></li></ul></div>`;
+    if (st.extraOpen && st.extras.length) {
+      h += `<div class="card"><h3>Дополнительные упражнения</h3><p class="note" style="margin-top:0">Эти дни недели пропущены. Повторите их план сейчас, и за каждый день вы получите кусочек.</p>`;
+      st.extras.forEach(ex => {
+        h += `<h3 class="bh2" style="color:var(--ink);margin:14px 0 6px;font-size:16px"><span>${DNS[(parseIso(ex.d).getDay() + 6) % 7]} ${fmt(parseIso(ex.d))}</span><small style="color:${ex.done ? "#14573A" : "var(--mute)"}">${ex.done ? "кусочек получен" : ""}</small></h3><ul class="list">`;
+        ex.items.forEach((it, i) => {
+          let sets = ""; for (let t = 0; t < it.s; t++) { const k = mon + "|" + ex.d + "|" + i + "|" + t, on = !!S.game.ex[k]; sets += `<button class="set${on ? " on" : ""}" data-gx="${k}" aria-pressed="${on}" aria-label="${esc(it.n)}, подход ${t + 1} из ${it.s}">${t + 1}</button>`; }
+          h += `<li><div class="ex"><div class="ex-h"><span class="nm">${esc(it.n)}</span><span class="vol">${it.s}×${it.r}${unitSm(it)}</span></div><div class="sets">${sets}</div></div></li>`;
+        });
+        h += `</ul>`;
+      });
+      h += `</div>`;
+    } else if (!st.extraOpen && st.missed.length) {
+      h += `<div class="card"><h3>Дополнительные упражнения</h3><p class="note" style="margin:0">Пропущено дней: ${st.missed.length}. В субботу и воскресенье здесь откроются дополнительные упражнения, чтобы наверстать.</p></div>`;
+    }
+    h += `<div class="actions"><button class="btn wide" id="gm-next" ${done ? "disabled" : ""}>Другая картина</button><button class="btn wide" id="gm-photo">Своё фото</button></div><div class="actions"><button class="btn wide" id="gm-coll">Коллекция (${S.game.coll.length})</button></div>
+      <p class="note" style="color:var(--tint)">Репродукции картин взяты из Википедии, это общественное достояние.</p>`;
+    $("gm-body").innerHTML = h;
+    save();
+    const im = await ensurePaint(w), cv = $("gm-cv"); if (!cv) return;
+    const cur = allPaint().find(v => v.id === w.pid) || q;
+    drawPuzzle(cv, im, w.n, w.seed, earned);
+    $("gm-cap").innerHTML = (gmMsg ? `<span style="color:#8B1A1A">${esc(gmMsg)}</span><br>` : "") + (done ? `<b>${esc(cur.t)}</b><br>${esc(cur.a)}${cur.y ? ", " + esc(cur.y) : ""}${cur.custom ? "" : "<br>Государственная Третьяковская галерея"}<br><b style="color:#14573A">Картина собрана!</b>` : `Открыто кусочков: ${earned} из ${w.n}. Какая это картина, станет ясно, когда пазл будет собран.`);
+  } finally { gmBusy = false; }
+}
+async function renderColl() {
+  let h = `<div class="card"><h3>Коллекция</h3>${S.game.coll.length ? "" : `<p class="note" style="margin:0">Здесь будут собранные картины.</p>`}<div class="coll">`;
+  const list = S.game.coll.slice().reverse(), imgs = await Promise.all(list.map(c => idbGet(c.pid)));
+  list.forEach((c, i) => { const q = allPaint().find(v => v.id === c.pid); h += `<figure>${imgs[i] ? `<img src="${imgs[i]}" alt="">` : `<img alt="" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==">`}<figcaption>${q ? esc(q.t) : "Картина"}<br>неделя ${fmt(parseIso(c.wk))}</figcaption></figure>`; });
+  h += `</div></div><div class="actions"><button class="btn wide" id="gm-collback">К пазлу</button></div>`;
+  $("gm-body").innerHTML = h;
+}
+function showGame() {
+  document.querySelectorAll(".view").forEach(v => { v.hidden = true; });
+  $("v-game").hidden = false; document.querySelectorAll("nav button").forEach(x => x.removeAttribute("aria-current"));
+  gmColl = false; window.scrollTo(0, 0); renderGame();
+}
+$("gm-back").addEventListener("click", () => { const b = document.querySelector('nav button[data-tab="' + gmPrevTab + '"]'); if (b) b.click(); });
+$("gm-body").addEventListener("click", e => {
+  const t = e.target.closest("button"); if (!t) return;
+  if (t.dataset.gx) { if (S.game.ex[t.dataset.gx]) delete S.game.ex[t.dataset.gx]; else S.game.ex[t.dataset.gx] = 1; save(); renderGame(); return; }
+  if (t.id === "gm-next") { const mon = weekMon(iso(new Date())), w = gameWeek(mon), l = allPaint(), i = l.findIndex(v => v.id === w.pid); w.pid = l[(i + 1) % l.length].id; save(); renderGame(); return; }
+  if (t.id === "gm-photo") { $("gm-file").click(); return; }
+  if (t.id === "gm-coll") { gmColl = true; renderGame(); return; }
+  if (t.id === "gm-collback") { gmColl = false; renderGame(); }
+});
+$("gm-file").addEventListener("change", async () => {
+  const f = $("gm-file").files[0]; if (!f) return;
+  try {
+    const data = await shrink(f, 1000), id = "c" + Date.now().toString(36); await idbPut(id, data);
+    S.game.custom.push({id, t:"Моё фото"}); const w = gameWeek(weekMon(iso(new Date()))); w.pid = id; save(); renderGame(); toast("Фото добавлено в пазл");
+  } catch (e) { toast("Не удалось открыть это фото"); }
+  $("gm-file").value = "";
+});
+function initGameUI() {
+  document.querySelectorAll(".brand").forEach(b => {
+    if (b.closest("#v-game")) return;
+    const g = document.createElement("button"); g.type = "button"; g.className = "gbtn"; g.setAttribute("aria-label", "Пазл недели");
+    g.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h4v2.5a1.8 1.8 0 1 0 3.6 0V3H21v6h-2.5a1.8 1.8 0 1 0 0 3.6H21V18h-4.4v-2.5a1.8 1.8 0 1 0-3.6 0V18H6v-4.5a1.8 1.8 0 1 1 0-3.6V6H9z"/></svg><span class="gb-t">0/4</span>`;
+    g.addEventListener("click", showGame); b.appendChild(g);
+  });
+  updateGameBadge();
+}
+
 /* ---------- Общее ---------- */
 let tt;
 function toast(t) { const el = $("toast"); el.textContent = t; el.classList.add("show"); clearTimeout(tt); tt = setTimeout(() => el.classList.remove("show"), 2600); }
 document.querySelectorAll("nav button").forEach(b => b.addEventListener("click", () => {
-  const t = b.dataset.tab;
+  const t = b.dataset.tab; gmPrevTab = t; $("v-game").hidden = true;
   $("v-train").hidden = t !== "train"; $("v-rec").hidden = t !== "rec"; $("v-abs").hidden = t !== "abs"; $("v-plan").hidden = t !== "plan"; $("v-body").hidden = t !== "body"; $("v-media").hidden = t !== "media";
   document.querySelectorAll("nav button").forEach(x => x.removeAttribute("aria-current"));
   b.setAttribute("aria-current", "page");
@@ -1957,7 +2234,7 @@ document.querySelectorAll("nav button").forEach(b => b.addEventListener("click",
   if (t === "rec") renderRec(); else if (t === "abs") { absEdit = false; absDate = iso(new Date()); renderAbs(); } else if (t === "body") { bSel = null; renderBody(); } else if (t === "media") { mEdit = null; mTypeAuto = true; mType = "link"; renderMedia(); } else if (t === "plan") { pMode = "view"; pDate = iso(new Date()); libEdit = null; renderPlan(); } else renderTrain();
 }));
 
-renderProfileUI(); renderTrain(); renderRec(); renderAbs(); renderPlan(); readIncoming();
+renderProfileUI(); renderTrain(); renderRec(); renderAbs(); renderPlan(); readIncoming(); initGameUI();
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist();
 if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
 </script>
