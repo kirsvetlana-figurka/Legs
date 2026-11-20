@@ -146,11 +146,33 @@ nav button[aria-current=page]{color:var(--blue)}
 .mact{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
 .mact .btn,.mact a.btn{min-height:40px;padding:0 12px;font-size:14px;display:inline-flex;align-items:center;text-decoration:none;color:var(--ink)}
 .rx-sep{border-top:1px solid var(--line);margin:16px 0 4px}
+.set.lock{opacity:.45;border-style:dashed}
+.btn:disabled{opacity:.5;cursor:not-allowed}
 .gbtn{margin-left:auto;flex:0 0 auto;display:flex;align-items:center;gap:6px;min-height:44px;padding:0 12px;border-radius:22px;border:1.5px solid var(--chipb);background:rgba(255,255,255,.08);color:#fff;font-weight:700;font-size:14px;font-variant-numeric:tabular-nums}
 .gbtn svg{width:20px;height:20px}
 .gm-head{display:flex;align-items:center;gap:12px}
 .gback{width:44px;height:44px;border-radius:12px;border:1.5px solid var(--chipb);background:rgba(255,255,255,.08);color:#fff;font-size:28px;line-height:1}
-.puz{width:100%;border-radius:12px;display:block;background:#1b1b1b}
+.board{position:relative;width:100%;border-radius:12px;overflow:hidden;background:#1b1b1b;touch-action:manipulation}
+.board .ghost{position:absolute;left:0;top:0;pointer-events:none}
+.board .cell{position:absolute;box-sizing:border-box;border:1px dashed rgba(255,255,255,.4);background:rgba(255,255,255,.05)}
+.board .cell.done{border:0;background:none}
+.board .cell.done canvas{display:block;animation:pop .4s}
+.board .cell.hot{background:rgba(255,255,255,.3)}
+.board .cell.bad{background:rgba(220,60,60,.5);animation:shake .35s}
+.gm-tools{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px}
+.gm-tools .btn{white-space:nowrap}
+.tray{display:flex;flex-wrap:wrap;gap:8px;min-height:64px;margin-top:8px;padding:10px;border-radius:12px;background:#F3E8EE;align-items:center}
+.tp{touch-action:none;border-radius:6px;box-shadow:0 2px 6px rgba(0,0,0,.4);cursor:grab;outline:3px solid transparent;user-select:none;-webkit-user-select:none}
+.tp.sel{outline-color:var(--blue)}
+.tp.new{animation:pulse 1s 3}
+.tp.drag{opacity:.3}
+.tp.bad{animation:shake .35s}
+.dragghost{position:fixed;z-index:60;pointer-events:none;border-radius:6px;box-shadow:0 8px 18px rgba(0,0,0,.5);opacity:.95}
+.gbtn.new{background:var(--accent);color:var(--ink);border-color:var(--accent)}
+@keyframes pop{0%{transform:scale(1.25)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,0),0 2px 6px rgba(0,0,0,.4)}50%{box-shadow:0 0 0 6px var(--accent),0 2px 6px rgba(0,0,0,.4)}}
+@media (prefers-reduced-motion:reduce){.board .cell.done canvas,.board .cell.bad,.tp.new,.tp.bad{animation:none}}
 .gmcap{margin:10px 0 0;font-size:15px}
 .gmcap b{font-size:18px}
 .gday{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:6px}
@@ -337,10 +359,11 @@ input[readonly]{background:#F2F5F8;font-size:13px}
     <div class="card"><h3>История</h3><ul class="hist" id="hist"></ul>
       <div class="actions"><button class="btn wide" id="more" type="button" hidden>Показать ещё</button></div></div>
 
-    <div class="card"><h3>Копия данных</h3>
-      <p class="note" style="margin-top:0">Данные хранятся только на этом телефоне. Сохраняйте копию время от времени, например перед очисткой браузера.</p>
-      <div class="actions"><button class="btn wide" id="export" type="button">Сохранить копию</button>
-      <button class="btn wide" id="import" type="button">Загрузить копию</button></div>
+    <div class="card"><h3>Копия профиля</h3>
+      <p class="note" style="margin-top:0">В файл сохраняется весь профиль: имя, цвет, логотип, тренировки, комплексы, рекорды, цели, план, справочник, вес, ссылки, игра и свои фото. Данные хранятся только на этом телефоне, поэтому сохраняйте копию время от времени.</p>
+      <div class="actions"><button class="btn wide" id="export" type="button">Сохранить профиль</button>
+      <button class="btn wide" id="import" type="button">Заменить из файла</button></div>
+      <p class="note">«Заменить из файла» перезапишет текущий профиль. Чтобы добавить профиль из файла как новый, откройте меню профилей (логотип в шапке) и выберите «Открыть профиль из файла».</p>
       <input type="file" id="file" accept="application/json,.json" hidden>
     </div>
   </main>
@@ -395,6 +418,7 @@ input[readonly]{background:#F2F5F8;font-size:13px}
   <button data-tab="media"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9.5v5l4.5-2.5z"/></svg>Библиотека</button>
 </nav>
 <datalist id="blocks"></datalist>
+<input type="file" id="pf-openfile" accept="application/json,.json" hidden>
 <datalist id="units"><option value="раз"><option value="сек"><option value="см"><option value="м"><option value="кг"><option value="мин"></datalist>
 <div id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-t"><div class="modal-card" id="modal-body"></div></div>
 <div id="toast" role="status" aria-live="polite"></div>
@@ -437,6 +461,9 @@ const iso = d => d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.get
 const isoRu = s => s.slice(8, 10) + "." + s.slice(5, 7) + "." + s.slice(0, 4);
 const parseIso = t => { const [y, m, d] = t.split("-").map(Number); return new Date(y, m - 1, d); };
 const shiftIso = (t, n) => { const d = parseIso(t); d.setDate(d.getDate() + n); return iso(d); };
+const isFutureDate = d => d > iso(new Date());
+const FUT_NOTE = `<p class="banner" style="background:#FFF1CC;color:#6B4E00">Этот день ещё не наступил. Отметить выполнение можно только в сам день.</p>`;
+function lockToast() { toast("Этот день ещё не наступил: отмечать выполнение можно только в сам день"); }
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
 /* ---------- Профили ---------- */
@@ -456,6 +483,8 @@ function pfMenu() {
   $("modal-body").innerHTML = `<h3 id="modal-t">Профили</h3><ul class="plain">${PROF.list.map(p => `<li><button class="pfrow${p.id === CUR.id ? " cur" : ""}" type="button" data-pf-switch="${esc(p.id)}"><span class="plg" style="background:${(p.theme || themeOf(p.color || {h:330})).hdr}">${logoHTML(p)}</span><span class="nm">${esc(p.name)}</span>${p.id === CUR.id ? "<small>текущий</small>" : ""}</button></li>`).join("")}</ul>
     <button class="btn primary" type="button" data-pf="new">＋ Новый профиль</button>
     <button class="btn" type="button" data-pf="edit">Изменить текущий профиль</button>
+    <button class="btn" type="button" data-pf="export">Сохранить профиль в файл</button>
+    <button class="btn" type="button" data-pf="open">Открыть профиль из файла</button>
     <button class="btn" type="button" data-pf="close">Закрыть</button>
     <p class="note">У каждого профиля свои тренировки, рекорды, вес, план и библиотека. Данные хранятся на этом телефоне.</p>`;
   $("modal").classList.add("show");
@@ -499,6 +528,8 @@ $("modal-body").addEventListener("click", e => {
   else if (a === "edit") { pfDraft = {id:CUR.id, name:CUR.name, color:Object.assign({}, CUR.color), logo:Object.assign({}, CUR.logo)}; pfEditor(); }
   else if (a === "close" || a === "cancel") closeModal();
   else if (a === "photo") $("pf-file").click();
+  else if (a === "export") exportProfile();
+  else if (a === "open") $("pf-openfile").click();
   else if (a === "save") pfSave();
   else if (a === "delete") {
     if (!confirm("Удалить профиль «" + pfDraft.name + "» и все его данные? Это нельзя отменить.")) return;
@@ -698,8 +729,9 @@ function renderTrain() {
     h += `<button role="tab" data-d="${d}" class="${d === sel.d ? "sel" : ""}${full ? " full" : ""}" aria-selected="${d === sel.d}"><b>${WDC[dt.getDay()]}</b><span class="num">${fmt(dt)}</span></button>`;
   }
   h += `</div>`;
-  const cnt = dayCount(p, sel.w, sel.d), tot = dayTotal(p, sel.w);
+  const cnt = dayCount(p, sel.w, sel.d), tot = dayTotal(p, sel.w), fut = isFutureDate(iso(progDate(p, sel.w, sel.d)));
   if (tot && cnt === tot) h += `<p class="banner">День выполнен</p>`;
+  if (fut) h += FUT_NOTE;
   h += `<ul class="list">`;
   p.ex.forEach((x, i) => {
     const [ns, rp] = pVol(p, sel.w, i), c = exCount(p, sel.w, sel.d, i), on = ns > 0 && c === ns;
@@ -707,11 +739,11 @@ function renderTrain() {
     let sets = "";
     for (let t = 0; t < ns; t++) {
       const d = !!S.done[pk(p, sel.w, sel.d, i, t)];
-      sets += `<button class="set${d ? " on" : ""}" data-e="${i}" data-t="${t}" aria-pressed="${d}" aria-label="${esc(x.n)}, подход ${t + 1} из ${ns}">${t + 1}</button>`;
+      sets += `<button class="set${d ? " on" : ""}${fut && !d ? " lock" : ""}" data-e="${i}" data-t="${t}" aria-pressed="${d}" aria-label="${esc(x.n)}, подход ${t + 1} из ${ns}">${t + 1}</button>`;
     }
     h += `<li><div class="ex${on ? " on" : ""}"><div class="ex-h"><span class="nm">${esc(x.n)}<small>${legs}сделано ${c} из ${ns}</small></span><span class="vol">${ns}×${rp}${unitSm(x)}</span></div><div class="sets">${sets}${x.u === "сек" ? tmBtn(i) : ""}</div></div></li>`;
   });
-  h += `</ul><div class="actions"><button class="btn wide" id="all">${cnt === tot ? "Снять все отметки" : "Отметить всё"}</button></div>`;
+  h += `</ul><div class="actions"><button class="btn wide" id="all"${fut && cnt !== tot ? " disabled" : ""}>${cnt === tot ? "Снять все отметки" : "Отметить всё"}</button></div>`;
   $("wk-body").innerHTML = h;
 }
 
@@ -868,17 +900,19 @@ $("wk-body").addEventListener("click", e => {
   const tmb = e.target.closest("[data-tm]");
   if (tmb) {
     const i = +tmb.dataset.tm, x = p.ex[i]; if (!x) return;
+    if (isFutureDate(iso(progDate(p, sel.w, sel.d)))) { lockToast(); return; }
     const ns = setsOf(p, sel.w, i), w = sel.w, d = sel.d;
     openTimer({name:x.n, secs:pVol(p, w, i)[1], keys:Array.from({length:ns}, (_, k) => pk(p, w, d, i, k)), store:S.done, after:renderTrain}); return;
   }
   const r = e.target.closest(".set");
   if (r) {
     const k = pk(p, sel.w, sel.d, +r.dataset.e, +r.dataset.t);
-    if (S.done[k]) delete S.done[k]; else S.done[k] = 1;
+    if (S.done[k]) delete S.done[k]; else { if (isFutureDate(iso(progDate(p, sel.w, sel.d)))) { lockToast(); return; } S.done[k] = 1; }
     save(); renderTrain(); return;
   }
   if (e.target.id === "all") {
     const all = dayCount(p, sel.w, sel.d) === dayTotal(p, sel.w);
+    if (!all && isFutureDate(iso(progDate(p, sel.w, sel.d)))) { lockToast(); return; }
     for (let i = 0; i < p.ex.length; i++) for (let t2 = 0; t2 < setsOf(p, sel.w, i); t2++) { const k = pk(p, sel.w, sel.d, i, t2); if (all) delete S.done[k]; else S.done[k] = 1; }
     save(); renderTrain();
   }
@@ -971,6 +1005,7 @@ $("form").addEventListener("submit", e => {
   const date = $("f-date").value, ex = +$("f-ex").value, q = parseFloat($("f-qty").value.replace(",", "."));
   if (!exOf(ex)) { toast("Сначала добавьте упражнение для рекордов"); return; }
   if (!date) { toast("Выберите дату"); return; }
+  if (isFutureDate(date)) { toast("Нельзя записать результат будущим числом"); return; }
   if (!(q > 0)) { toast("Введите результат больше нуля"); $("f-qty").focus(); return; }
   const prev = S.rec.filter(r => r.ex === ex).map(r => r.q);
   const isRec = !prev.length || q > Math.max(...prev);
@@ -986,26 +1021,68 @@ $("hist").addEventListener("click", e => {
 });
 $("more").addEventListener("click", () => { histLimit += 15; renderRec(); });
 
-$("export").addEventListener("click", () => {
-  const blob = new Blob([JSON.stringify(S)], {type:"application/json"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob); a.download = "trenirovki-kopiya-" + iso(new Date()) + ".json";
-  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-  toast("Копия сохранена в загрузки");
-});
+/* ---------- Копия всего профиля ---------- */
+async function buildProfileFile() {
+  const ids = new Set();
+  S.game.custom.forEach(c => ids.add(c.id)); S.game.coll.forEach(c => ids.add(c.pid));
+  const w = S.game.wk[weekMon(iso(new Date()))]; if (w) ids.add(w.pid);
+  const images = {};
+  for (const id of ids) { const d = await idbGet(id); if (d) images[id] = d; }
+  return {app:"legs-profile", v:1, saved:new Date().toISOString(), profile:{name:CUR.name, color:CUR.color, logo:CUR.logo, noLegs:!!CUR.noLegs}, data:S, images};
+}
+async function exportProfile() {
+  try {
+    const file = await buildProfileFile(), safe = (CUR.name || "").replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-+|-+$/g, "") || "profil";
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(file)], {type:"application/json"})); a.download = "trenirovki-" + safe + "-" + iso(new Date()) + ".json";
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    toast("Профиль «" + CUR.name + "» сохранён в загрузки");
+  } catch (e) { toast("Не удалось сохранить профиль"); }
+}
+// возвращает {profile|null, data, images}; поддерживает и старые копии, где были только данные
+function parseProfileFile(text) {
+  const o = JSON.parse(text);
+  if (o && o.app === "legs-profile" && o.data && typeof o.data.done === "object" && Array.isArray(o.data.rec)) return {profile:o.profile || null, data:o.data, images:o.images || {}};
+  if (o && typeof o.done === "object" && Array.isArray(o.rec)) return {profile:null, data:o, images:{}};
+  throw new Error("format");
+}
+async function restoreImages(images) { for (const id of Object.keys(images)) if (typeof images[id] === "string" && images[id].indexOf("data:image/") === 0) await idbPut(id, images[id]); }
+const cleanColor = c => (c && typeof c.h === "number" && c.h >= 0 && c.h <= 360) ? (c.g ? {h:c.h, g:1} : {h:c.h}) : {h:330};
+const cleanLogo = l => (l && l.t === "img" && typeof l.img === "string" && l.img.indexOf("data:image/") === 0) ? {t:"img", img:l.img} : {t:(l && (LOGOS.indexOf(l.t) >= 0 || l.t === "letter")) ? l.t : "bunny"};
+$("export").addEventListener("click", exportProfile);
+// заменить текущий профиль данными из файла
 $("import").addEventListener("click", () => $("file").click());
 $("file").addEventListener("change", () => {
   const f = $("file").files[0]; if (!f) return;
   const rd = new FileReader();
-  rd.onload = () => {
+  rd.onload = async () => {
     try {
-      const o = JSON.parse(rd.result);
-      if (!o || typeof o.done !== "object" || !Array.isArray(o.rec)) throw 0;
-      if (!confirm("Заменить текущие данные данными из копии?")) return;
-      S = {done:o.done, rec:o.rec, abs:o.abs, lib:o.lib, plan:o.plan, pdone:o.pdone, pid:o.pid, imp:o.imp, progs:o.progs, cur:o.cur, goals:o.goals, rv:o.rv, body:o.body, media:o.media, blocks:o.blocks, pabs:o.pabs, legsCfg:o.legsCfg, game:o.game}; fixAbs(S); migrate(); save(); renderTrain(); renderRec(); renderAbs(); renderPlan(); toast("Данные загружены");
+      const r = parseProfileFile(rd.result);
+      if (!confirm(r.profile ? "Заменить текущий профиль «" + CUR.name + "» профилем из файла? Данные, имя, цвет и логотип будут заменены." : "Заменить текущие данные данными из копии?")) return;
+      await restoreImages(r.images);
+      if (r.profile) { CUR.name = String(r.profile.name || CUR.name).trim().slice(0, 20) || CUR.name; CUR.color = cleanColor(r.profile.color); CUR.theme = themeOf(CUR.color); CUR.logo = cleanLogo(r.profile.logo); if (CUR.id !== "main") CUR.noLegs = !!r.profile.noLegs; saveProfiles(); }
+      localStorage.setItem(K, JSON.stringify(r.data)); location.reload();
     } catch (e) { toast("Файл не подходит"); }
   };
   rd.readAsText(f); $("file").value = "";
+});
+// добавить профиль из файла как новый
+$("pf-openfile").addEventListener("change", () => {
+  const f = $("pf-openfile").files[0]; if (!f) return;
+  const rd = new FileReader();
+  rd.onload = async () => {
+    try {
+      const r = parseProfileFile(rd.result), pr = r.profile || {};
+      let name = String(pr.name || "Из файла").trim().slice(0, 20) || "Из файла";
+      if (PROF.list.some(x => x.name === name)) name = (name.slice(0, 12) + " (из файла)").slice(0, 20);
+      if (!confirm("Добавить профиль «" + name + "» из файла? Он появится как новый, текущий профиль не изменится.")) return;
+      await restoreImages(r.images);
+      const id = "u" + Date.now().toString(36), color = cleanColor(pr.color);
+      PROF.list.push({id, name, key:"legs-tracker-" + id, noLegs:!!pr.noLegs, color, theme:themeOf(color), logo:cleanLogo(pr.logo)});
+      localStorage.setItem("legs-tracker-" + id, JSON.stringify(r.data)); PROF.cur = id; saveProfiles(); location.reload();
+    } catch (e) { toast("Файл не подходит"); }
+  };
+  rd.readAsText(f); $("pf-openfile").value = "";
 });
 
 /* ---------- Таймер ---------- */
@@ -1121,18 +1198,20 @@ function renderAbs() {
     h += `<div class="restcard"><b>Список пуст</b>Добавьте упражнения, чтобы отмечать подходы.</div><div class="actions"><button class="btn primary wide" id="abs-edit">Изменить список</button></div>`;
     $("abs-body").innerHTML = h; return;
   }
+  const fut = isFutureDate(absDate);
   if (aDay(absDate) === tot) h += `<p class="banner">День выполнен</p>`;
+  if (fut) h += FUT_NOTE;
   h += `<ul class="list">`;
   absList().forEach(x => {
     const c = aCount(absDate, x), on = c === x.s;
     let sets = "";
     for (let t = 0; t < x.s; t++) {
       const d = !!S.abs.done[akey(absDate, x.id, t)];
-      sets += `<button class="set${d ? " on" : ""}" data-x="${x.id}" data-t="${t}" aria-pressed="${d}" aria-label="${esc(x.n)}, подход ${t + 1} из ${x.s}">${t + 1}</button>`;
+      sets += `<button class="set${d ? " on" : ""}${fut && !d ? " lock" : ""}" data-x="${x.id}" data-t="${t}" aria-pressed="${d}" aria-label="${esc(x.n)}, подход ${t + 1} из ${x.s}">${t + 1}</button>`;
     }
     h += `<li><div class="ex${on ? " on" : ""}"><div class="ex-h"><span class="nm">${esc(x.n)}<small>сделано ${c} из ${x.s}</small></span><span class="vol">${x.s}×${x.r}${x.u === "сек" ? ' <small style="font-size:14px;font-weight:400">сек</small>' : ""}</span></div><div class="sets">${sets}${x.u === "сек" ? tmBtn(x.id) : ""}</div></div></li>`;
   });
-  h += `</ul><div class="actions"><button class="btn wide" id="abs-all">${aDay(absDate) === tot ? "Снять все отметки" : "Отметить всё"}</button><button class="btn wide" id="abs-edit">Изменить список</button></div>`;
+  h += `</ul><div class="actions"><button class="btn wide" id="abs-all"${fut && aDay(absDate) !== tot ? " disabled" : ""}>${aDay(absDate) === tot ? "Снять все отметки" : "Отметить всё"}</button><button class="btn wide" id="abs-edit">Изменить список</button></div>`;
   $("abs-body").innerHTML = h;
 }
 
@@ -1144,6 +1223,7 @@ $("abs-body").addEventListener("click", e => {
   const t = e.target.closest("button"); if (!t) return;
   if (t.dataset.tm) {
     const x = absList().find(v => v.id === +t.dataset.tm); if (!x) return;
+    if (isFutureDate(absDate)) { lockToast(); return; }
     openTimer({name:x.n, secs:x.r, keys:Array.from({length:x.s}, (_, i) => akey(absDate, x.id, i)), store:S.abs.done, after:renderAbs}); return;
   }
   if (t.id === "abs-prev") { absDate = shiftIso(absDate, -1); renderAbs(); return; }
@@ -1161,11 +1241,12 @@ $("abs-body").addEventListener("click", e => {
   }
   if (t.classList.contains("set")) {
     const k = akey(absDate, +t.dataset.x, +t.dataset.t);
-    if (S.abs.done[k]) delete S.abs.done[k]; else S.abs.done[k] = 1;
+    if (S.abs.done[k]) delete S.abs.done[k]; else { if (isFutureDate(absDate)) { lockToast(); return; } S.abs.done[k] = 1; }
     save(); renderAbs(); return;
   }
   if (t.id === "abs-all") {
     const all = aDay(absDate) === aTotal();
+    if (!all && isFutureDate(absDate)) { lockToast(); return; }
     absList().forEach(x => { for (let i = 0; i < x.s; i++) { const k = akey(absDate, x.id, i); if (all) delete S.abs.done[k]; else S.abs.done[k] = 1; } });
     save(); renderAbs();
   }
@@ -1273,8 +1354,9 @@ function planBody() {
   if (!L.length && !A.length && !absOn(pDate)) {
     return h + `<div class="restcard"><b>План на этот день пуст</b>Добавьте упражнения или целый блок из справочника.</div><div class="actions"><button class="btn primary wide" id="pl-pick-open">Добавить из справочника</button></div><div class="actions"><button class="btn wide" id="pl-share">Отправить план</button></div>`;
   }
-  const tot = pTotal(pDate), all = tot > 0 && pDay(pDate) === tot;
+  const tot = pTotal(pDate), all = tot > 0 && pDay(pDate) === tot, fut = isFutureDate(pDate);
   if (all) h += `<p class="banner">День выполнен</p>`;
+  if (fut) h += FUT_NOTE;
   const groups = [];
   L.forEach(x => { const bk = x.blk || ""; let g = groups.find(v => v.b === bk); if (!g) { g = {b:bk, items:[]}; groups.push(g); } g.items.push(x); });
   const order = blockNames(), pos = n => n ? (order.indexOf(n) >= 0 ? order.indexOf(n) : 998) : 999;
@@ -1285,7 +1367,7 @@ function planBody() {
     let sets = "";
     for (let t = 0; t < x.s; t++) {
       const d = !!S.pdone[pkey(pDate, x.id, t)];
-      sets += `<button class="set${d ? " on" : ""}" data-p="${x.id}" data-t="${t}" aria-pressed="${d}" aria-label="${esc(x.n)}, подход ${t + 1} из ${x.s}">${t + 1}</button>`;
+      sets += `<button class="set${d ? " on" : ""}${fut && !d ? " lock" : ""}" data-p="${x.id}" data-t="${t}" aria-pressed="${d}" aria-label="${esc(x.n)}, подход ${t + 1} из ${x.s}">${t + 1}</button>`;
     }
     return `<li><div class="ex${on ? " on" : ""}"><div class="ex-h"><span class="nm">${esc(x.n)}<small>сделано ${c} из ${x.s}</small></span><span class="vol">${x.s}×${x.r}${unitSm(x)}</span></div><div class="sets">${sets}${x.u === "сек" ? tmBtn(x.id) : ""}</div></div></li>`;
   };
@@ -1296,7 +1378,7 @@ function planBody() {
       let sets = "";
       for (let t = 0; t < ns; t++) {
         const d = !!S.done[pk(o.p, o.w, o.d, i, t)];
-        sets += `<button class="set${d ? " on" : ""}" data-ps="${o.p.id}|${o.w}|${o.d}|${i}|${t}" aria-pressed="${d}" aria-label="${esc(x.n)}, подход ${t + 1} из ${ns}">${t + 1}</button>`;
+        sets += `<button class="set${d ? " on" : ""}${fut && !d ? " lock" : ""}" data-ps="${o.p.id}|${o.w}|${o.d}|${i}|${t}" aria-pressed="${d}" aria-label="${esc(x.n)}, подход ${t + 1} из ${ns}">${t + 1}</button>`;
       }
       const tb = x.u === "сек" ? tmBtn(o.p.id + "|" + o.w + "|" + o.d + "|" + i).replace("data-tm=", "data-ptm=") : "";
       h += `<li><div class="ex${on ? " on" : ""}"><div class="ex-h"><span class="nm">${esc(x.n)}<small>${o.p.builtin ? ((i === 3 || i === 4) ? "на двух ногах, " : (WK[o.w][0] === 1 ? "на каждую ногу, " : "на двух ногах, ")) : ""}сделано ${c} из ${ns}</small></span><span class="vol">${ns}×${rp}${unitSm(x)}</span></div><div class="sets">${sets}${tb}</div></div></li>`;
@@ -1308,7 +1390,7 @@ function planBody() {
     h += `<h3 class="bh2"><span>${ABS_BLK}</span><small>страница «Пресс», ${aDay(pDate)} из ${aTotal()}</small></h3><ul class="list">`;
     h += AL.length ? AL.map(x => {
       const c = aCount(pDate, x), on = c === x.s; let sets = "";
-      for (let t = 0; t < x.s; t++) { const d = !!S.abs.done[akey(pDate, x.id, t)]; sets += `<button class="set${d ? " on" : ""}" data-pa="${x.id}|${t}" aria-pressed="${d}" aria-label="${esc(x.n)}, подход ${t + 1} из ${x.s}">${t + 1}</button>`; }
+      for (let t = 0; t < x.s; t++) { const d = !!S.abs.done[akey(pDate, x.id, t)]; sets += `<button class="set${d ? " on" : ""}${fut && !d ? " lock" : ""}" data-pa="${x.id}|${t}" aria-pressed="${d}" aria-label="${esc(x.n)}, подход ${t + 1} из ${x.s}">${t + 1}</button>`; }
       return `<li><div class="ex${on ? " on" : ""}"><div class="ex-h"><span class="nm">${esc(x.n)}<small>сделано ${c} из ${x.s}</small></span><span class="vol">${x.s}×${x.r}${unitSm(x)}</span></div><div class="sets">${sets}${x.u === "сек" ? tmBtn(x.id).replace("data-tm=", "data-pat=") : ""}</div></div></li>`;
     }).join("") : `<li class="restcard"><b>В блоке «Пресс» пока нет упражнений</b>Добавьте их на странице «Пресс» или в справочнике.</li>`;
     h += `</ul>`;
@@ -1317,7 +1399,7 @@ function planBody() {
     if (heads) h += `<h3 class="bh2"><span>${esc(g.b === ABS_BLK && absOn(pDate) ? "Пресс, отдельные упражнения" : (g.b || "Без блока"))}</span><small>${g.items.reduce((a, x) => a + pCount(pDate, x), 0)} из ${g.items.reduce((a, x) => a + x.s, 0)}</small></h3>`;
     h += `<ul class="list">${g.items.map(manualCard).join("")}</ul>`;
   });
-  return h + `<div class="actions"><button class="btn primary wide" id="pl-pick-open">Добавить из справочника</button></div><div class="actions"><button class="btn wide" id="pl-all">${all ? "Снять все отметки" : "Отметить всё"}</button><button class="btn wide" id="pl-edit">Изменить</button></div><div class="actions"><button class="btn wide" id="pl-share">Отправить план</button></div>`;
+  return h + `<div class="actions"><button class="btn primary wide" id="pl-pick-open">Добавить из справочника</button></div><div class="actions"><button class="btn wide" id="pl-all"${fut && !all ? " disabled" : ""}>${all ? "Снять все отметки" : "Отметить всё"}</button><button class="btn wide" id="pl-edit">Изменить</button></div><div class="actions"><button class="btn wide" id="pl-share">Отправить план</button></div>`;
 }
 
 function libBody() {
@@ -1364,20 +1446,22 @@ $("pl-body").addEventListener("click", e => {
   const id = t.id;
   if (t.dataset.unabs !== undefined) { delete S.pabs[pDate]; save(); renderPlan(); return; }
   if (t.dataset.pa) {
-    const q = t.dataset.pa.split("|"), k = akey(pDate, +q[0], +q[1]); if (S.abs.done[k]) delete S.abs.done[k]; else S.abs.done[k] = 1;
+    const q = t.dataset.pa.split("|"), k = akey(pDate, +q[0], +q[1]); if (S.abs.done[k]) delete S.abs.done[k]; else { if (isFutureDate(pDate)) { lockToast(); return; } S.abs.done[k] = 1; }
     save(); renderPlan(); return;
   }
   if (t.dataset.pat) {
     const x = absList().find(v => v.id === +t.dataset.pat); if (!x) return;
+    if (isFutureDate(pDate)) { lockToast(); return; }
     openTimer({name:x.n, secs:x.r, keys:Array.from({length:x.s}, (_, i) => akey(pDate, x.id, i)), store:S.abs.done, after:renderPlan}); return;
   }
   if (t.dataset.ps) {
     const q = t.dataset.ps.split("|"), pr = progs().find(v => v.id === q[0]); if (!pr) return;
-    const k = pk(pr, +q[1], +q[2], +q[3], +q[4]); if (S.done[k]) delete S.done[k]; else S.done[k] = 1;
+    const k = pk(pr, +q[1], +q[2], +q[3], +q[4]); if (S.done[k]) delete S.done[k]; else { if (isFutureDate(pDate)) { lockToast(); return; } S.done[k] = 1; }
     save(); renderPlan(); return;
   }
   if (t.dataset.ptm) {
     const q = t.dataset.ptm.split("|"), pr = progs().find(v => v.id === q[0]); if (!pr) return;
+    if (isFutureDate(pDate)) { lockToast(); return; }
     const w = +q[1], d = +q[2], i = +q[3], x = pr.ex[i], ns = setsOf(pr, w, i);
     openTimer({name:x.n, secs:pVol(pr, w, i)[1], keys:Array.from({length:ns}, (_, k) => pk(pr, w, d, i, k)), store:S.done, after:renderPlan}); return;
   }
@@ -1407,6 +1491,7 @@ $("pl-body").addEventListener("click", e => {
   }
   if (t.dataset.tm) {
     const x = pList(pDate).find(v => v.id === +t.dataset.tm); if (!x) return;
+    if (isFutureDate(pDate)) { lockToast(); return; }
     openTimer({name:x.n, secs:x.r, keys:Array.from({length:x.s}, (_, i) => pkey(pDate, x.id, i)), store:S.pdone, after:renderPlan}); return;
   }
   if (id === "pl-share") { pMode = "share"; pShareId = Math.random().toString(36).slice(2, 8); pScope = Object.keys(S.plan).some(d => d >= iso(new Date()) && pList(d).length) ? "all" : "day"; renderPlan(); return; }
@@ -1426,6 +1511,7 @@ $("pl-body").addEventListener("click", e => {
   if (id === "pl-golib") { pTab = "lib"; pMode = "view"; renderPlan(); return; }
   if (id === "pl-all") {
     const all = pDay(pDate) === pTotal(pDate);
+    if (!all && isFutureDate(pDate)) { lockToast(); return; }
     pList(pDate).forEach(x => { for (let i = 0; i < x.s; i++) { const k = pkey(pDate, x.id, i); if (all) delete S.pdone[k]; else S.pdone[k] = 1; } });
     autoFor(pDate).forEach(o => o.p.ex.forEach((_, i) => { for (let t = 0; t < setsOf(o.p, o.w, i); t++) { const k = pk(o.p, o.w, o.d, i, t); if (all) delete S.done[k]; else S.done[k] = 1; } }));
     if (absOn(pDate)) absList().forEach(x => { for (let t = 0; t < x.s; t++) { const k = akey(pDate, x.id, t); if (all) delete S.abs.done[k]; else S.abs.done[k] = 1; } });
@@ -1438,7 +1524,7 @@ $("pl-body").addEventListener("click", e => {
   }
   if (t.classList.contains("set")) {
     const k = pkey(pDate, +t.dataset.p, +t.dataset.t);
-    if (S.pdone[k]) delete S.pdone[k]; else S.pdone[k] = 1;
+    if (S.pdone[k]) delete S.pdone[k]; else { if (isFutureDate(pDate)) { lockToast(); return; } S.pdone[k] = 1; }
     save(); renderPlan(); return;
   }
   if (t.classList.contains("pdel")) {
@@ -1904,6 +1990,7 @@ $("b-main").addEventListener("submit", e => {
   const date = $("b-date").value, wr = $("b-w").value.trim().replace(",", "."), hr = $("b-h").value.trim().replace(",", ".");
   const w = wr === "" ? null : parseFloat(wr), h = hr === "" ? null : parseFloat(hr);
   if (!date) { toast("Выберите дату"); return; }
+  if (isFutureDate(date)) { toast("Нельзя записать вес будущим числом"); return; }
   if (w === null && h === null) { toast("Введите вес или рост"); return; }
   if (w !== null && !(w >= 20 && w <= 300)) { toast("Вес должен быть от 20 до 300 кг"); return; }
   if (h !== null && !(h >= 50 && h <= 250)) { toast("Рост должен быть от 50 до 250 см"); return; }
@@ -2014,6 +2101,8 @@ function gameSweep() {
     if (dayDone(d)) { if (!G.cd[d]) G.cd[d] = G.init ? today : (d <= today ? d : today); } else delete G.cd[d];
   });
   G.init = true;
+  const gm = weekMon(today), gw = gameWeek(gm), gs = gameState(gm);
+  gw.got = Math.max(gw.got, Math.min(gw.n, gs.earned)); if (gw.got > 0) gw.lock = true;
   Object.keys(G.cd).forEach(k => { if (k < shiftIso(today, -70)) delete G.cd[k]; });
 }
 function dayItems(d) {
@@ -2034,6 +2123,9 @@ function pickPaint(mon) {
 function gameWeek(mon) {
   const G = S.game; let w = G.wk[mon];
   if (!w) w = G.wk[mon] = {pid:pickPaint(mon), n:calcN(mon), seed:hashStr("w" + mon)};
+  if (!Array.isArray(w.placed)) w.placed = [];
+  if (typeof w.got !== "number") w.got = 0;
+  if (typeof w.miss !== "number") w.miss = 0;
   if (!w.lock && mon === weekMon(iso(new Date()))) w.n = calcN(mon);
   return w;
 }
@@ -2061,9 +2153,9 @@ function gameState(mon) {
   return st;
 }
 function updateGameBadge() {
-  const mon = weekMon(iso(new Date())), w = gameWeek(mon), st = gameState(mon), e = Math.min(w.n, st.earned);
-  if (e > 0) w.lock = true;
-  document.querySelectorAll(".gb-t").forEach(el => { el.textContent = e + "/" + w.n; });
+  const w = gameWeek(weekMon(iso(new Date()))), free = Math.max(0, w.got - w.placed.length);
+  document.querySelectorAll(".gb-t").forEach(el => { el.textContent = w.placed.length + "/" + w.n; });
+  document.querySelectorAll(".gbtn").forEach(g => g.classList.toggle("new", free > 0));
 }
 
 /* --- картинки: загрузка из Википедии, сжатие и хранение на телефоне --- */
@@ -2071,7 +2163,7 @@ function idb() { return new Promise((res, rej) => { const r = indexedDB.open("le
 async function idbGet(id) { try { const db = await idb(); return await new Promise(res => { const q = db.transaction("img").objectStore("img").get(id); q.onsuccess = () => res(q.result ? q.result.data : null); q.onerror = () => res(null); }); } catch (e) { return null; } }
 async function idbPut(id, data) { try { const db = await idb(); return await new Promise(res => { const tx = db.transaction("img", "readwrite"); tx.objectStore("img").put({id, data}); tx.oncomplete = () => res(true); tx.onerror = () => res(false); }); } catch (e) { return false; } }
 const fetchT = (url, ms, opt) => { const ac = new AbortController(), t = setTimeout(() => ac.abort(), ms); return fetch(url, Object.assign({signal:ac.signal}, opt || {})).finally(() => clearTimeout(t)); };
-function thumbUrl(src, width, want) {
+function wikiThumb(src, width, want) {
   if (!src || (width && width <= want)) return src;
   const m = src.match(/^(https:\/\/upload\.wikimedia\.org\/wikipedia\/(?:commons|ru|en))\/([0-9a-f]\/[0-9a-f]{2})\/([^\/?#]+\.(?:jpe?g|png))$/i);
   return m ? m[1] + "/thumb/" + m[2] + "/" + m[3] + "/" + want + "px-" + m[3] : src;
@@ -2089,7 +2181,7 @@ async function fetchPainting(q) {
       const r = await fetchT("https://" + lang + ".wikipedia.org/api/rest_v1/page/summary/" + encodeURIComponent(title.replace(/ /g, "_")), 12000);
       if (!r.ok) continue;
       const j = await r.json(), o = j.originalimage || j.thumbnail; if (!o || !o.source) continue;
-      const ir = await fetchT(thumbUrl(o.source, o.width, 960), 25000, {mode:"cors"}); if (!ir.ok) continue;
+      const ir = await fetchT(wikiThumb(o.source, o.width, 960), 25000, {mode:"cors"}); if (!ir.ok) continue;
       const data = await shrink(await ir.blob(), 1000); await idbPut(q.id, data); return data;
     } catch (e) {}
   }
@@ -2120,49 +2212,119 @@ async function ensurePaint(w) {
   const im = await toImage(makeFallback()); gmImg = {pid:"fallback", img:im}; return im;
 }
 
-/* --- рисование пазла --- */
+/* --- поле, лоток и перетаскивание деталей --- */
 function layout(n, ar) {
   const R = Math.max(1, Math.round(Math.sqrt(n / ar))), base = Math.floor(n / R), ext = n % R, out = [];
   for (let r = 0; r < R; r++) { const cnt = base + (r < ext ? 1 : 0); for (let c = 0; c < cnt; c++) out.push({x0:c / cnt, x1:(c + 1) / cnt, y0:r / R, y1:(r + 1) / R}); }
   return out;
 }
-function drawPuzzle(cv, img, n, seed, earned) {
-  const W = cv.clientWidth || 340, H = Math.round(W * img.height / img.width), dpr = window.devicePixelRatio || 1;
-  cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + "px";
-  const x = cv.getContext("2d"); x.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const rects = layout(n, img.width / img.height), order = rects.map((_, i) => i), rnd = rng(seed);
-  for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
-  const open = new Set(order.slice(0, earned)), hdr = getComputedStyle(document.documentElement).getPropertyValue("--hdr").trim() || "#4A2237";
-  rects.forEach((r, i) => {
-    const px = r.x0 * W, py = r.y0 * H, pw = (r.x1 - r.x0) * W, ph = (r.y1 - r.y0) * H;
-    if (open.has(i)) x.drawImage(img, r.x0 * img.width, r.y0 * img.height, (r.x1 - r.x0) * img.width, (r.y1 - r.y0) * img.height, px, py, pw, ph);
-    else { x.fillStyle = hdr; x.fillRect(px, py, pw, ph); x.fillStyle = "rgba(255,255,255,.12)"; x.fillRect(px, py, pw, ph); x.fillStyle = "rgba(255,255,255,.45)"; x.font = "bold " + Math.round(Math.min(pw, ph) * 0.42) + "px sans-serif"; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText("?", px + pw / 2, py + ph / 2); }
-    x.strokeStyle = "rgba(0,0,0,.35)"; x.lineWidth = 2; x.strokeRect(px + 1, py + 1, pw - 2, ph - 2);
-  });
+function shuffleOrder(n, seed) {
+  const o = Array.from({length:n}, (_, i) => i), rnd = rng(seed);
+  for (let i = o.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [o[i], o[j]] = [o[j], o[i]]; }
+  return o;
 }
+function sliceCanvas(img, r, pw, ph) {
+  const dpr = window.devicePixelRatio || 1, cv = document.createElement("canvas");
+  cv.width = Math.max(1, Math.round(pw * dpr)); cv.height = Math.max(1, Math.round(ph * dpr)); cv.style.width = pw + "px"; cv.style.height = ph + "px";
+  cv.getContext("2d").drawImage(img, r.x0 * img.width, r.y0 * img.height, (r.x1 - r.x0) * img.width, (r.y1 - r.y0) * img.height, 0, 0, cv.width, cv.height);
+  return cv;
+}
+let gmCtx = null, gmSel = null, drag = null;
+function paintBoard() {
+  const c = gmCtx; if (!c || !$("gm-board")) return;
+  const {w, img, rects, order} = c, board = $("gm-board"), tray = $("gm-tray"), W = board.clientWidth || 330, H = Math.round(W * img.height / img.width), placed = new Set(w.placed), done = placed.size >= w.n;
+  board.style.height = H + "px";
+  let h = S.game.hint !== false || done ? `<canvas class="ghost" style="opacity:${done ? 1 : 0.2}"></canvas>` : "";
+  rects.forEach((r, i) => { h += `<div class="cell${placed.has(i) ? " done" : ""}" data-i="${i}" ${placed.has(i) ? "" : `role="button" tabindex="0" aria-label="Место ${i + 1}"`} style="left:${r.x0 * 100}%;top:${r.y0 * 100}%;width:${(r.x1 - r.x0) * 100}%;height:${(r.y1 - r.y0) * 100}%"></div>`; });
+  board.innerHTML = h;
+  const g = board.querySelector(".ghost"); if (g) { const dpr = window.devicePixelRatio || 1; g.width = W * dpr; g.height = H * dpr; g.style.width = "100%"; g.style.height = "100%"; g.getContext("2d").drawImage(img, 0, 0, g.width, g.height); }
+  board.querySelectorAll(".cell.done").forEach(el => { const r = rects[+el.dataset.i], cv = sliceCanvas(img, r, Math.round((r.x1 - r.x0) * W), Math.round((r.y1 - r.y0) * H)); cv.style.width = "100%"; cv.style.height = "100%"; el.appendChild(cv); });
+  tray.innerHTML = "";
+  const avail = order.slice(0, w.got).filter(i => !placed.has(i));
+  avail.forEach((i, k) => {
+    const r = rects[i], pw = (r.x1 - r.x0) * W, ph = (r.y1 - r.y0) * H, sc = Math.min(1, 104 / Math.max(pw, ph)), el = sliceCanvas(img, r, Math.round(pw * sc), Math.round(ph * sc));
+    el.className = "tp" + (gmSel === i ? " sel" : "") + (k >= (w.seen || 0) ? " new" : ""); el.dataset.i = i; el.setAttribute("role", "button"); el.tabIndex = 0; el.setAttribute("aria-label", "Деталь " + (k + 1) + ", нажмите и выберите место");
+    tray.appendChild(el);
+  });
+  if (!avail.length) tray.innerHTML = `<span class="note" style="margin:auto">${done ? "Все детали на месте." : "Новых деталей пока нет. Выполняйте план и достигайте целей, и они появятся здесь."}</span>`;
+  w.seen = w.got; tray.hidden = false;
+}
+function updateGmText() {
+  const c = gmCtx; if (!c) return; const {w} = c, done = w.placed.length >= w.n, cur = allPaint().find(v => v.id === w.pid) || PAINTINGS[0], free = w.got - w.placed.length;
+  $("gm-stat").textContent = "Расставлено " + w.placed.length + " из " + w.n + ", ошибок " + w.miss;
+  $("gm-sub").textContent = fmt(parseIso(c.mon)) + " – " + fmt(parseIso(shiftIso(c.mon, 6))) + ", получено " + w.got + " из " + w.n;
+  $("gm-trayh").textContent = "Детали (" + Math.max(0, free) + ")";
+  $("gm-cap").innerHTML = (gmMsg ? `<span style="color:#8B1A1A">${esc(gmMsg)}</span><br>` : "") + (done ? `<b>${esc(cur.t)}</b><br>${esc(cur.a)}${cur.y ? ", " + esc(cur.y) : ""}${cur.custom ? "" : "<br>Государственная Третьяковская галерея"}<br><b style="color:#14573A">Картина собрана!</b>` : `Перетащите деталь на её место или нажмите на деталь, а затем на место на поле. Что за картина, станет ясно, когда пазл будет собран.`);
+  const nb = $("gm-next"); if (nb) nb.disabled = done;
+}
+function flash(el, cls) { if (!el) return; el.classList.add(cls); setTimeout(() => el.classList.remove(cls), 420); }
+function tryPlace(pi, ci) {
+  const c = gmCtx; if (!c) return; const w = c.w; if (w.placed.indexOf(ci) >= 0) return;
+  if (pi === ci) {
+    w.placed.push(pi); gmSel = null; save(); paintBoard();
+    if (w.placed.length >= w.n) { renderGame(); toast("Картина собрана!"); } else { updateGmText(); toast("Верно!"); }
+  } else {
+    w.miss++; save(); updateGmText();
+    flash($("gm-board").querySelector('.cell[data-i="' + ci + '"]'), "bad"); flash($("gm-tray").querySelector('.tp[data-i="' + pi + '"]'), "bad");
+    toast("Здесь деталь не подходит, попробуйте другое место");
+  }
+}
+const cellAt = (x, y) => { const el = document.elementFromPoint(x, y); const c = el && el.closest(".cell"); return c && !c.classList.contains("done") ? c : null; };
+$("gm-body").addEventListener("pointerdown", e => {
+  const el = e.target.closest(".tp"); if (!el) return;
+  e.preventDefault(); drag = {i:+el.dataset.i, el, sx:e.clientX, sy:e.clientY, moved:false, ghost:null};
+});
+document.addEventListener("pointermove", e => {
+  if (!drag) return;
+  if (!drag.moved && Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) > 8) {
+    drag.moved = true; const g = document.createElement("canvas"); g.width = drag.el.width; g.height = drag.el.height; g.getContext("2d").drawImage(drag.el, 0, 0);
+    g.className = "dragghost"; g.style.width = drag.el.style.width; g.style.height = drag.el.style.height; document.body.appendChild(g); drag.ghost = g; drag.el.classList.add("drag");
+  }
+  if (drag.ghost) {
+    const g = drag.ghost, w = parseFloat(g.style.width), h = parseFloat(g.style.height); g.style.left = (e.clientX - w / 2) + "px"; g.style.top = (e.clientY - h / 2 - 28) + "px";
+    document.querySelectorAll(".cell.hot").forEach(x => x.classList.remove("hot")); const c = cellAt(e.clientX, e.clientY - 28); if (c) c.classList.add("hot");
+  }
+});
+function endDrag(e, drop) {
+  if (!drag) return; const d = drag; drag = null;
+  if (d.ghost) d.ghost.remove(); d.el.classList.remove("drag"); document.querySelectorAll(".cell.hot").forEach(x => x.classList.remove("hot"));
+  if (!drop) return;
+  if (d.moved) { const c = cellAt(e.clientX, e.clientY - 28); if (c) tryPlace(d.i, +c.dataset.i); }
+  else { gmSel = gmSel === d.i ? null : d.i; paintBoard(); }
+}
+document.addEventListener("pointerup", e => endDrag(e, true));
+document.addEventListener("pointercancel", e => endDrag(e, false));
+$("gm-body").addEventListener("keydown", e => {
+  if (e.key !== "Enter" && e.key !== " ") return;
+  const tp = e.target.closest(".tp"), ce = e.target.closest(".cell"); if (!tp && !ce) return; e.preventDefault();
+  if (tp) { gmSel = gmSel === +tp.dataset.i ? null : +tp.dataset.i; paintBoard(); } else if (gmSel !== null) tryPlace(gmSel, +ce.dataset.i);
+});
 
 /* --- экран игры --- */
 const DNS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 async function renderGame() {
   if (gmBusy) return; gmBusy = true;
   try {
-    const today = iso(new Date()), mon = weekMon(today), w = gameWeek(mon), st = gameState(mon), earned = Math.min(w.n, st.earned), done = earned >= w.n;
-    $("gm-sub").textContent = fmt(parseIso(mon)) + " – " + fmt(parseIso(shiftIso(mon, 6))) + ", кусочков " + earned + " из " + w.n;
-    if (earned > 0) w.lock = true;
-    if (done && !S.game.coll.some(c => c.wk === mon)) { S.game.coll.push({wk:mon, pid:w.pid}); }
+    const today = iso(new Date()), mon = weekMon(today), w = gameWeek(mon), st = gameState(mon);
+    w.got = Math.max(w.got, Math.min(w.n, st.earned)); if (w.got > 0) w.lock = true;
+    const done = w.placed.length >= w.n;
+    if (done && !S.game.coll.some(c => c.wk === mon)) S.game.coll.push({wk:mon, pid:w.pid});
+    $("gm-sub").textContent = fmt(parseIso(mon)) + " – " + fmt(parseIso(shiftIso(mon, 6))) + ", получено " + w.got + " из " + w.n;
     if (gmColl) { await renderColl(); return; }
-    const q = allPaint().find(v => v.id === w.pid) || PAINTINGS[0];
-    let h = `<div class="card"><canvas class="puz" id="gm-cv" role="img" aria-label="Пазл: открыто кусочков ${earned} из ${w.n}"></canvas><div class="gmcap" id="gm-cap">Загружаю картину…</div></div>`;
-    h += `<div class="card"><h3>Как получить кусочки</h3>
-      <p class="note" style="margin-top:0">Каждую неделю новая картина Третьяковской галереи. +1 кусочек за день, когда план выполнен в этот же день. +1 за каждую цель, достигнутую больше чем на 60% на этой неделе. В субботу и воскресенье пропущенные дни можно наверстать дополнительными упражнениями.</p>
+    let h = `<div class="card"><div class="board" id="gm-board" role="group" aria-label="Поле пазла"></div>
+      <div class="gm-tools"><span class="note" style="margin:0" id="gm-stat"></span><button class="btn" id="gm-hint" type="button" style="min-height:40px;padding:0 12px">Подсказка: ${S.game.hint === false ? "выкл" : "вкл"}</button></div>
+      <h3 style="margin:12px 0 0" id="gm-trayh">Детали</h3><div class="tray" id="gm-tray"></div>
+      <div class="gmcap" id="gm-cap">Загружаю картину…</div></div>`;
+    h += `<div class="card"><h3>Как получить детали</h3>
+      <p class="note" style="margin-top:0">Каждую неделю новая картина Третьяковской галереи. Детали появляются в лотке: +1 за день, когда план выполнен в этот же день, и +1 за каждую цель, достигнутую больше чем на 60% на этой неделе. В субботу и воскресенье пропущенные дни можно наверстать дополнительными упражнениями. Деталь нужно поставить на своё место на поле.</p>
       <div class="gday">${st.days.map((d, i) => `<div class="${d.state}${d.d === today ? " today" : ""}" title="${isoRu(d.d)}">${DNS[i]}<b>${d.state === "ok" ? "✓" : d.state === "missed" ? "✕" : d.state === "none" ? "·" : "•"}</b></div>`).join("")}</div>
       <ul class="gsrc"><li><span>План по дням</span><span class="${st.dayPieces ? "yes" : ""}">${st.dayPieces} из ${st.days.filter(d => d.t).length}</span></li>
       ${st.goals.length ? st.goals.map(g => `<li><span>Цель: ${esc(g.x.n)}</span><span class="${g.ok ? "yes" : ""}">${g.ok ? "✓ " : ""}${Math.round(g.best / g.g * 100)}%</span></li>`).join("") : `<li><span>Цели</span><span>не заданы (вкладка «Рекорды»)</span></li>`}
       <li><span>Доп. упражнения</span><span class="${st.extraPieces ? "yes" : ""}">${st.extraPieces}</span></li></ul></div>`;
     if (st.extraOpen && st.extras.length) {
-      h += `<div class="card"><h3>Дополнительные упражнения</h3><p class="note" style="margin-top:0">Эти дни недели пропущены. Повторите их план сейчас, и за каждый день вы получите кусочек.</p>`;
+      h += `<div class="card"><h3>Дополнительные упражнения</h3><p class="note" style="margin-top:0">Эти дни недели пропущены. Повторите их план сейчас, и за каждый день вы получите деталь.</p>`;
       st.extras.forEach(ex => {
-        h += `<h3 class="bh2" style="color:var(--ink);margin:14px 0 6px;font-size:16px"><span>${DNS[(parseIso(ex.d).getDay() + 6) % 7]} ${fmt(parseIso(ex.d))}</span><small style="color:${ex.done ? "#14573A" : "var(--mute)"}">${ex.done ? "кусочек получен" : ""}</small></h3><ul class="list">`;
+        h += `<h3 class="bh2" style="color:var(--ink);margin:14px 0 6px;font-size:16px"><span>${DNS[(parseIso(ex.d).getDay() + 6) % 7]} ${fmt(parseIso(ex.d))}</span><small style="color:${ex.done ? "#14573A" : "var(--mute)"}">${ex.done ? "деталь получена" : ""}</small></h3><ul class="list">`;
         ex.items.forEach((it, i) => {
           let sets = ""; for (let t = 0; t < it.s; t++) { const k = mon + "|" + ex.d + "|" + i + "|" + t, on = !!S.game.ex[k]; sets += `<button class="set${on ? " on" : ""}" data-gx="${k}" aria-pressed="${on}" aria-label="${esc(it.n)}, подход ${t + 1} из ${it.s}">${t + 1}</button>`; }
           h += `<li><div class="ex"><div class="ex-h"><span class="nm">${esc(it.n)}</span><span class="vol">${it.s}×${it.r}${unitSm(it)}</span></div><div class="sets">${sets}</div></div></li>`;
@@ -2177,10 +2339,9 @@ async function renderGame() {
       <p class="note" style="color:var(--tint)">Репродукции картин взяты из Википедии, это общественное достояние.</p>`;
     $("gm-body").innerHTML = h;
     save();
-    const im = await ensurePaint(w), cv = $("gm-cv"); if (!cv) return;
-    const cur = allPaint().find(v => v.id === w.pid) || q;
-    drawPuzzle(cv, im, w.n, w.seed, earned);
-    $("gm-cap").innerHTML = (gmMsg ? `<span style="color:#8B1A1A">${esc(gmMsg)}</span><br>` : "") + (done ? `<b>${esc(cur.t)}</b><br>${esc(cur.a)}${cur.y ? ", " + esc(cur.y) : ""}${cur.custom ? "" : "<br>Государственная Третьяковская галерея"}<br><b style="color:#14573A">Картина собрана!</b>` : `Открыто кусочков: ${earned} из ${w.n}. Какая это картина, станет ясно, когда пазл будет собран.`);
+    const im = await ensurePaint(w); if (!$("gm-board")) return;
+    gmCtx = {mon, w, img:im, rects:layout(w.n, im.width / im.height), order:shuffleOrder(w.n, w.seed)};
+    paintBoard(); updateGmText();
   } finally { gmBusy = false; }
 }
 async function renderColl() {
@@ -2193,13 +2354,20 @@ async function renderColl() {
 function showGame() {
   document.querySelectorAll(".view").forEach(v => { v.hidden = true; });
   $("v-game").hidden = false; document.querySelectorAll("nav button").forEach(x => x.removeAttribute("aria-current"));
-  gmColl = false; window.scrollTo(0, 0); renderGame();
+  gmColl = false; gmSel = null; window.scrollTo(0, 0); renderGame();
 }
 $("gm-back").addEventListener("click", () => { const b = document.querySelector('nav button[data-tab="' + gmPrevTab + '"]'); if (b) b.click(); });
 $("gm-body").addEventListener("click", e => {
+  const cell = e.target.closest(".cell");
+  if (cell) { if (!cell.classList.contains("done")) { if (gmSel === null) toast("Сначала выберите деталь внизу"); else tryPlace(gmSel, +cell.dataset.i); } return; }
   const t = e.target.closest("button"); if (!t) return;
   if (t.dataset.gx) { if (S.game.ex[t.dataset.gx]) delete S.game.ex[t.dataset.gx]; else S.game.ex[t.dataset.gx] = 1; save(); renderGame(); return; }
-  if (t.id === "gm-next") { const mon = weekMon(iso(new Date())), w = gameWeek(mon), l = allPaint(), i = l.findIndex(v => v.id === w.pid); w.pid = l[(i + 1) % l.length].id; save(); renderGame(); return; }
+  if (t.id === "gm-hint") { S.game.hint = S.game.hint === false; save(); t.textContent = "Подсказка: " + (S.game.hint === false ? "выкл" : "вкл"); paintBoard(); return; }
+  if (t.id === "gm-next") {
+    const mon = weekMon(iso(new Date())), w = gameWeek(mon), l = allPaint(), i = l.findIndex(v => v.id === w.pid);
+    if (w.placed.length && !confirm("Новая картина сбросит расставленные детали, они вернутся в лоток. Продолжить?")) return;
+    w.placed = []; w.seen = 0; gmSel = null; w.pid = l[(i + 1) % l.length].id; save(); renderGame(); return;
+  }
   if (t.id === "gm-photo") { $("gm-file").click(); return; }
   if (t.id === "gm-coll") { gmColl = true; renderGame(); return; }
   if (t.id === "gm-collback") { gmColl = false; renderGame(); }
@@ -2208,7 +2376,7 @@ $("gm-file").addEventListener("change", async () => {
   const f = $("gm-file").files[0]; if (!f) return;
   try {
     const data = await shrink(f, 1000), id = "c" + Date.now().toString(36); await idbPut(id, data);
-    S.game.custom.push({id, t:"Моё фото"}); const w = gameWeek(weekMon(iso(new Date()))); w.pid = id; save(); renderGame(); toast("Фото добавлено в пазл");
+    S.game.custom.push({id, t:"Моё фото"}); const w = gameWeek(weekMon(iso(new Date()))); w.pid = id; w.placed = []; w.seen = 0; save(); renderGame(); toast("Фото добавлено в пазл");
   } catch (e) { toast("Не удалось открыть это фото"); }
   $("gm-file").value = "";
 });
