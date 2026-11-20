@@ -1,4 +1,4 @@
-const CACHE = "legs-v20";
+const CACHE = "legs-v23";
 const FILES = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
 
 // При установке берём свежие файлы с сервера, минуя кеш браузера.
